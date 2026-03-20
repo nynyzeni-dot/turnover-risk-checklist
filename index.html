@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>離職リスク診断チェックリスト</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    min-height: 100vh;
+    padding-bottom: 120px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #2d3436, #636e72);
+    color: #fff;
+    padding: 24px 16px 18px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+  }
+  .header p {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 6px;
+  }
+
+  .progress-bar {
+    background: #e0e0e0;
+    height: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00b894, #fdcb6e, #e17055, #d63031);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .score-display {
+    text-align: center;
+    padding: 16px;
+    font-size: 0.9rem;
+    color: #636e72;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 6px;
+    z-index: 99;
+  }
+  .score-display .count {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 2px;
+    transition: color 0.3s;
+  }
+
+  .category {
+    margin: 16px 12px 0;
+  }
+  .category-label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .cat-a { background: #0984e3; }
+  .cat-b { background: #6c5ce7; }
+  .cat-c { background: #e17055; }
+  .cat-d { background: #00b894; }
+  .cat-e { background: #fdcb6e; color: #2d3436; }
+
+  .check-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .check-item:active {
+    transform: scale(0.98);
+  }
+  .check-item.checked {
+    border-color: #d63031;
+    background: #fff5f5;
+  }
+
+  .checkbox {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 50%;
+    border: 2.5px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+    margin-top: 1px;
+  }
+  .check-item.checked .checkbox {
+    border-color: #d63031;
+    background: #d63031;
+  }
+  .checkbox svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .check-item.checked .checkbox svg {
+    opacity: 1;
+  }
+
+  .check-text {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #2d3436;
+    flex: 1;
+  }
+  .check-num {
+    font-weight: 800;
+    color: #636e72;
+    margin-right: 4px;
+    font-size: 0.85rem;
+  }
+
+  /* 結果パネル */
+  .result-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(100%);
+  }
+  .result-panel.visible {
+    transform: translateY(0);
+  }
+
+  .result-btn {
+    display: block;
+    width: calc(100% - 24px);
+    margin: 0 auto 12px;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .result-btn:active {
+    transform: scale(0.97);
+  }
+
+  /* 結果モーダル */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+  }
+  .overlay.show {
+    display: flex;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .result-card {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.4s ease;
+  }
+
+  .result-header {
+    padding: 28px 24px 20px;
+    text-align: center;
+    border-radius: 20px 20px 0 0;
+    color: #fff;
+  }
+  .result-icon {
+    font-size: 3rem;
+    margin-bottom: 8px;
+  }
+  .result-level {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+  .result-score {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin-top: 6px;
+  }
+
+  .result-body {
+    padding: 24px;
+  }
+  .result-msg {
+    font-size: 0.92rem;
+    line-height: 1.8;
+    color: #2d3436;
+    margin-bottom: 20px;
+  }
+  .result-advice {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .result-advice h3 {
+    font-size: 0.82rem;
+    color: #636e72;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .result-advice p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #2d3436;
+  }
+
+  .close-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #f0f2f5;
+    color: #2d3436;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .close-btn:active {
+    background: #ddd;
+  }
+
+  .gauge {
+    margin: 20px auto 0;
+    text-align: center;
+  }
+  .gauge svg {
+    width: 180px;
+    height: 100px;
+  }
+  .gauge-label {
+    font-size: 0.75rem;
+    color: #636e72;
+    margin-top: 4px;
+  }
+
+  .seminar-box {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    color: #fff;
+    text-align: center;
+  }
+  .seminar-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+  .seminar-title {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+  .seminar-detail {
+    font-size: 0.8rem;
+    line-height: 1.7;
+    opacity: 0.92;
+    margin-bottom: 10px;
+  }
+  .seminar-note {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+  .seminar-line {
+    font-size: 0.82rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>美容室オーナー向け<br>離職リスク診断チェックリスト</h1>
+  <p>当てはまる項目をタップしてチェック</p>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="score-display">
+  チェック数：<span class="count" id="scoreCount">0</span> / 10
+</div>
+
+<!-- A: 認識・理解 -->
+<div class="category">
+  <span class="category-label cat-a">A｜認識・理解</span>
+  <div class="check-item" onclick="toggle(this)" data-index="1">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">1.</span>スタッフが1人辞めるだけで、指名売上・教育コスト・採用コスト・お客様・残ったスタッフの士気が同時に消えると理解していない
+    </div>
+  </div>
+  <div class="check-item" onclick="toggle(this)" data-index="2">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">2.</span>求人より離職防止の方がコスパが高いと理解していない
+    </div>
+  </div>
+</div>
+
+<!-- B: 面談・コミュニケーション -->
+<div class="category">
+  <span class="category-label cat-b">B｜面談・コミュニケーション</span>
+  <div class="check-item" onclick="toggle(this)" data-index="3">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">3.</span>スタッフとの定期個別面談ができていない
+    </div>
+  </div>
+  <div class="check-item" onclick="toggle(this)" data-index="4">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">4.</span>退職者の本音を聞けないまま送り出し、面談も先送りにしている
+    </div>
+  </div>
+</div>
+
+<!-- C: 感情・態度 -->
+<div class="category">
+  <span class="category-label cat-c">C｜感情・態度</span>
+  <div class="check-item" onclick="toggle(this)" data-index="5">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">5.</span>不満を言うスタッフを面倒くさいと思っている
+    </div>
+  </div>
+  <div class="check-item" onclick="toggle(this)" data-index="6">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">6.</span>辞めたスタッフの悪口を言っている
+    </div>
+  </div>
+</div>
+
+<!-- D: 組織・仕組み -->
+<div class="category">
+  <span class="category-label cat-d">D｜組織・仕組み</span>
+  <div class="check-item" onclick="toggle(this)" data-index="7">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">7.</span>問題スタッフを放置して周りが疲弊している
+    </div>
+  </div>
+  <div class="check-item" onclick="toggle(this)" data-index="8">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">8.</span>新人教育をベテラン任せにしている
+    </div>
+  </div>
+</div>
+
+<!-- E: 対処 -->
+<div class="category">
+  <span class="category-label cat-e">E｜対処</span>
+  <div class="check-item" onclick="toggle(this)" data-index="9">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">9.</span>辞めそうになってから慌てて対処している
+    </div>
+  </div>
+  <div class="check-item" onclick="toggle(this)" data-index="10">
+    <div class="checkbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="check-text">
+      <span class="check-num">10.</span>損益・人件費率を月次で把握できていない
+    </div>
+  </div>
+</div>
+
+<!-- 診断ボタン -->
+<div class="result-panel" id="resultPanel">
+  <button class="result-btn" id="resultBtn" onclick="showResult()">診断結果を見る</button>
+</div>
+
+<!-- 結果モーダル -->
+<div class="overlay" id="overlay" onclick="closeResult(event)">
+  <div class="result-card" id="resultCard">
+    <div class="result-header" id="resultHeader">
+      <div class="result-icon" id="resultIcon"></div>
+      <div class="result-level" id="resultLevel"></div>
+      <div class="result-score" id="resultScore"></div>
+    </div>
+    <div class="result-body">
+      <div class="gauge">
+        <svg viewBox="0 0 200 110">
+          <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#e0e0e0" stroke-width="14" stroke-linecap="round"/>
+          <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round" id="gaugeArc"
+                stroke-dasharray="251.3" stroke-dashoffset="251.3"/>
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00b894"/>
+              <stop offset="50%" stop-color="#fdcb6e"/>
+              <stop offset="100%" stop-color="#d63031"/>
+            </linearGradient>
+          </defs>
+          <circle cx="100" cy="100" r="4" fill="#2d3436" id="gaugeNeedle"/>
+          <line x1="100" y1="100" x2="30" y2="100" stroke="#2d3436" stroke-width="2.5" stroke-linecap="round" id="needleLine"/>
+        </svg>
+        <div class="gauge-label">離職リスクレベル</div>
+      </div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="result-advice">
+        <h3 id="adviceTitle"></h3>
+        <p id="adviceText"></p>
+      </div>
+      <div class="seminar-box" id="seminarBox" style="display:none;">
+        <div class="seminar-icon">📩</div>
+        <div class="seminar-title">離職防止オンラインセミナー</div>
+        <div class="seminar-detail">少人数制（最大3名）で、あなたのサロンの状況に合わせた具体的なアドバイスをお伝えします。</div>
+        <div class="seminar-note" id="seminarNote"></div>
+        <div class="seminar-line">後日LINEからセミナー日程をお送りしますので、ぜひチェックしてください！</div>
+      </div>
+      <button class="close-btn" onclick="closeResult()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let checkedCount = 0;
+
+function toggle(el) {
+  el.classList.toggle('checked');
+  checkedCount = document.querySelectorAll('.check-item.checked').length;
+
+  // スコア更新
+  const countEl = document.getElementById('scoreCount');
+  countEl.textContent = checkedCount;
+
+  // プログレスバー
+  document.getElementById('progressFill').style.width = (checkedCount / 10 * 100) + '%';
+
+  // スコアの色
+  if (checkedCount <= 2) countEl.style.color = '#00b894';
+  else if (checkedCount <= 5) countEl.style.color = '#fdcb6e';
+  else if (checkedCount <= 7) countEl.style.color = '#e17055';
+  else countEl.style.color = '#d63031';
+
+  // ボタン表示
+  const panel = document.getElementById('resultPanel');
+  if (checkedCount > 0) {
+    panel.classList.add('visible');
+    updateBtnStyle();
+  } else {
+    panel.classList.remove('visible');
+  }
+}
+
+function updateBtnStyle() {
+  const btn = document.getElementById('resultBtn');
+  if (checkedCount <= 2) {
+    btn.style.background = 'linear-gradient(135deg, #00b894, #00cec9)';
+  } else if (checkedCount <= 5) {
+    btn.style.background = 'linear-gradient(135deg, #fdcb6e, #f39c12)';
+  } else if (checkedCount <= 7) {
+    btn.style.background = 'linear-gradient(135deg, #e17055, #d63031)';
+  } else {
+    btn.style.background = 'linear-gradient(135deg, #d63031, #c0392b)';
+  }
+}
+
+const results = {
+  safe: {
+    icon: '\u2705',
+    level: '\u5b89\u5fc3\u30ec\u30d9\u30eb',
+    color: 'linear-gradient(135deg, #00b894, #00cec9)',
+    msg: '\u7d20\u6674\u3089\u3057\u3044\u3067\u3059\uff01\u96e2\u8077\u30ea\u30b9\u30af\u3078\u306e\u610f\u8b58\u304c\u3057\u3063\u304b\u308a\u3067\u304d\u3066\u3044\u307e\u3059\u3002\u3053\u306e\u8abf\u5b50\u3067\u9032\u3081\u3066\u3044\u304d\u307e\u3057\u3087\u3046\uff01\u4eca\u306e\u53d6\u308a\u7d44\u307f\u3092\u7d99\u7d9a\u3057\u3064\u3064\u3001\u5b9a\u671f\u7684\u306b\u898b\u76f4\u3057\u3092\u884c\u3046\u3053\u3068\u3067\u3001\u3055\u3089\u306b\u5f37\u3044\u7d44\u7e54\u306b\u306a\u308a\u307e\u3059\u3002',
+    advTitle: '\u2192 \u3053\u306e\u8abf\u5b50\u3067\u7d9a\u3051\u307e\u3057\u3087\u3046',
+    advText: '\u4eca\u306e\u826f\u3044\u72b6\u614b\u3092\u7dad\u6301\u3059\u308b\u305f\u3081\u306b\u3001\u30b9\u30bf\u30c3\u30d5\u3068\u306e\u9762\u8ac7\u3092\u3055\u3089\u306b\u5145\u5b9f\u3055\u305b\u307e\u3057\u3087\u3046\u3002\u300c\u554f\u984c\u304c\u306a\u3044\u6642\u300d\u3053\u305d\u3001\u653b\u3081\u306e\u4eba\u4e8b\u65bd\u7b56\u3092\u6253\u3066\u308b\u30c1\u30e3\u30f3\u30b9\u3067\u3059\u3002',
+    seminar: ''
+  },
+  caution: {
+    icon: '\u26a0\ufe0f',
+    level: '\u8981\u6ce8\u610f',
+    color: 'linear-gradient(135deg, #fdcb6e, #f39c12)',
+    msg: '\u3044\u304f\u3064\u304b\u306e\u30ea\u30b9\u30af\u8981\u56e0\u304c\u898b\u3064\u304b\u308a\u307e\u3057\u305f\u3002\u4eca\u306f\u307e\u3060\u5927\u4e08\u592b\u3067\u3082\u3001\u653e\u7f6e\u3059\u308b\u3068\u300c\u6c17\u3065\u3044\u305f\u3089\u9000\u8077\u5c4a\u304c\u51fa\u3066\u3044\u305f\u300d\u3068\u3044\u3046\u4e8b\u614b\u306b\u306a\u308a\u304b\u306d\u307e\u305b\u3093\u3002\u4eca\u306e\u3046\u3061\u306b\u624b\u3092\u6253\u3061\u307e\u3057\u3087\u3046\u3002',
+    advTitle: '\u2192 \u307e\u305a\u3084\u308b\u3079\u304d\u3053\u3068',
+    advText: '\u30c1\u30a7\u30c3\u30af\u304c\u3064\u3044\u305f\u9805\u76ee\u3092\u4e0a\u304b\u30891\u3064\u305a\u3064\u6f70\u3057\u3066\u3044\u304d\u307e\u3057\u3087\u3046\u3002\u7279\u306b\u300c\u9762\u8ac7\u300d\u306f\u3059\u3050\u306b\u59cb\u3081\u3089\u308c\u307e\u3059\u3002\u6708\u306b1\u56de\u300115\u5206\u3067\u3082OK\u3067\u3059\u3002',
+    seminar: ''
+  },
+  danger: {
+    icon: '\ud83d\udea8',
+    level: '\u5371\u967a\u30ec\u30d9\u30eb',
+    color: 'linear-gradient(135deg, #e17055, #d63031)',
+    msg: '\u96e2\u8077\u30ea\u30b9\u30af\u304c\u304b\u306a\u308a\u9ad8\u3044\u72b6\u614b\u3067\u3059\u3002\u3059\u3067\u306b\u30b9\u30bf\u30c3\u30d5\u306e\u4e2d\u306b\u300c\u8ee2\u8077\u30b5\u30a4\u30c8\u3092\u898b\u3066\u3044\u308b\u4eba\u300d\u304c\u3044\u308b\u304b\u3082\u3057\u308c\u307e\u305b\u3093\u3002\u8fd1\u3044\u5c06\u6765\u3001\u9000\u8077\u30e9\u30c3\u30b7\u30e5\u304c\u8d77\u304d\u308b\u53ef\u80fd\u6027\u304c\u3042\u308a\u307e\u3059\u3002',
+    advTitle: '\u2192 \u3059\u3050\u306b\u52d5\u3044\u3066\u307b\u3057\u3044\u3053\u3068',
+    advText: '\u307e\u305a\u4eca\u9031\u4e2d\u306b\u5168\u30b9\u30bf\u30c3\u30d5\u3068\u500b\u5225\u9762\u8ac7\u306e\u5834\u3092\u8a2d\u3051\u3066\u304f\u3060\u3055\u3044\u3002\u300c\u6700\u8fd1\u3069\u3046\uff1f\u300d\u3067\u306f\u306a\u304f\u3001\u300c\u4e0d\u6e80\u306b\u601d\u3063\u3066\u3044\u308b\u3053\u3068\u3092\u6b63\u76f4\u306b\u6559\u3048\u3066\u307b\u3057\u3044\u300d\u3068\u4f1d\u3048\u3066\u304f\u3060\u3055\u3044\u3002',
+    seminar: 'show'
+  },
+  critical: {
+    icon: '\ud83d\udd25',
+    level: '\u7dca\u6025\u4e8b\u614b',
+    color: 'linear-gradient(135deg, #d63031, #c0392b)',
+    msg: '\u7d44\u7e54\u304c\u5d29\u58ca\u5bf8\u524d\u306e\u72b6\u614b\u3067\u3059\u3002\u30b9\u30bf\u30c3\u30d5\u306f\u300c\u3053\u306e\u30b5\u30ed\u30f3\u306b\u3044\u3066\u3082\u672a\u6765\u304c\u306a\u3044\u300d\u3068\u611f\u3058\u3066\u3044\u308b\u53ef\u80fd\u6027\u304c\u9ad8\u3044\u3067\u3059\u30021\u4eba\u8f9e\u3081\u305f\u3089\u9023\u9396\u9000\u8077\u306b\u7e4b\u304c\u308b\u30ea\u30b9\u30af\u304c\u3042\u308a\u307e\u3059\u3002',
+    advTitle: '\u2192 \u4eca\u3059\u3050\u884c\u52d5\u3057\u3066\u304f\u3060\u3055\u3044',
+    advText: '\u4e00\u4eba\u3067\u62b1\u3048\u8fbc\u307e\u306a\u3044\u3067\u304f\u3060\u3055\u3044\u3002\u3053\u306e\u72b6\u614b\u304b\u3089\u306e\u7acb\u3066\u76f4\u3057\u306b\u306f\u3001\u7b2c\u4e09\u8005\u306e\u8996\u70b9\u304c\u4e0d\u53ef\u6b20\u3067\u3059\u3002',
+    seminar: 'show'
+  }
+};
+
+function getLevel(count) {
+  if (count <= 2) return 'safe';
+  if (count <= 5) return 'caution';
+  if (count <= 7) return 'danger';
+  return 'critical';
+}
+
+function showResult() {
+  const level = getLevel(checkedCount);
+  const r = results[level];
+
+  document.getElementById('resultIcon').textContent = r.icon;
+  document.getElementById('resultLevel').textContent = r.level;
+  document.getElementById('resultScore').textContent = '10\u9805\u76ee\u4e2d ' + checkedCount + '\u9805\u76ee\u306b\u8a72\u5f53';
+  document.getElementById('resultHeader').style.background = r.color;
+  document.getElementById('resultMsg').textContent = r.msg;
+  document.getElementById('adviceTitle').textContent = r.advTitle;
+  document.getElementById('adviceText').textContent = r.advText;
+
+  // セミナー案内の表示制御
+  const seminarBox = document.getElementById('seminarBox');
+  const seminarNote = document.getElementById('seminarNote');
+  if (r.seminar === 'show') {
+    seminarBox.style.display = 'block';
+    if (level === 'critical') {
+      seminarNote.textContent = '\u203c\ufe0f \u4eca\u306e\u72b6\u614b\u3092\u5909\u3048\u308b\u306b\u306f\u3001\u884c\u52d5\u3042\u308b\u306e\u307f\u3067\u3059';
+    } else {
+      seminarNote.textContent = '\u203c\ufe0f \u3053\u306e\u6a5f\u4f1a\u306b\u3001\u4e00\u6b69\u8e0f\u307f\u51fa\u3057\u3066\u307f\u307e\u305b\u3093\u304b\uff1f';
+    }
+  } else {
+    seminarBox.style.display = 'none';
+  }
+
+  document.getElementById('overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // ゲージアニメ
+  setTimeout(() => {
+    const ratio = checkedCount / 10;
+    const arc = document.getElementById('gaugeArc');
+    const totalLen = 251.3;
+    arc.style.transition = 'stroke-dashoffset 1s ease';
+    arc.style.strokeDashoffset = totalLen * (1 - ratio);
+
+    // 針の角度
+    const angle = 180 + (ratio * 180);
+    const rad = angle * Math.PI / 180;
+    const cx = 100, cy = 100, len = 65;
+    const x2 = cx + len * Math.cos(rad);
+    const y2 = cy + len * Math.sin(rad);
+    const line = document.getElementById('needleLine');
+    line.style.transition = 'all 1s ease';
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+  }, 100);
+}
+
+function closeResult(e) {
+  if (e && e.target !== document.getElementById('overlay')) return;
+  document.getElementById('overlay').classList.remove('show');
+  document.body.style.overflow = '';
+
+  // ゲージリセット
+  document.getElementById('gaugeArc').style.transition = 'none';
+  document.getElementById('gaugeArc').style.strokeDashoffset = '251.3';
+  document.getElementById('needleLine').style.transition = 'none';
+  document.getElementById('needleLine').setAttribute('x2', '30');
+  document.getElementById('needleLine').setAttribute('y2', '100');
+}
+</script>
+
+</body>
+</html>
