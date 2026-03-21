@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>LANIKAI サロン成長ヒアリングシート</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    background: #f0f4f5;
+    color: #2d2d2d;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #3a6073, #6bb5a0);
+    color: #fff;
+    padding: 28px 20px 22px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.6;
+  }
+  .header p {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  .progress-container {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f0f4f5;
+    padding: 10px 16px 6px;
+    border-bottom: 1px solid #d4e0e0;
+  }
+  .progress-bar {
+    background: #d4e0e0;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3a6073, #6bb5a0);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-text {
+    font-size: 0.7rem;
+    color: #888;
+    text-align: right;
+    margin-top: 3px;
+  }
+
+  .section {
+    margin: 16px 12px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .section-header {
+    background: linear-gradient(135deg, #3a6073, #6bb5a0);
+    color: #fff;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .section-header .section-num {
+    display: inline-block;
+    background: rgba(255,255,255,0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    margin-right: 8px;
+  }
+
+  .question {
+    padding: 18px;
+    border-bottom: 1px solid #eef3f3;
+  }
+  .question:last-child { border-bottom: none; }
+
+  .q-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #3a6073;
+    margin-bottom: 4px;
+  }
+  .q-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    color: #2d2d2d;
+  }
+  .q-hint {
+    font-size: 0.73rem;
+    color: #999;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 1.5px solid #d4e0e0;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    resize: vertical;
+    background: #fafcfc;
+    color: #2d2d2d;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  textarea:focus {
+    border-color: #6bb5a0;
+    background: #fff;
+  }
+
+  .check-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .check-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    border: 1.5px solid #d4e0e0;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    background: #fafcfc;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .check-btn.selected {
+    border-color: #6bb5a0;
+    background: #6bb5a0;
+    color: #fff;
+  }
+  .check-btn:active {
+    transform: scale(0.96);
+  }
+
+  select {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid #d4e0e0;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    background: #fafcfc;
+    color: #2d2d2d;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  select:focus {
+    border-color: #6bb5a0;
+  }
+
+  .submit-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    background: rgba(240,244,245,0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid #d4e0e0;
+    z-index: 200;
+  }
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3a6073, #6bb5a0);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s;
+  }
+  .submit-btn:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+  .submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .complete-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(240,244,245,0.98);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    animation: fadeIn 0.4s;
+  }
+  .complete-overlay.show {
+    display: flex;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  .complete-card {
+    text-align: center;
+    max-width: 360px;
+  }
+  .complete-icon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+  }
+  .complete-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #3a6073;
+    margin-bottom: 12px;
+  }
+  .complete-msg {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: #666;
+    margin-bottom: 24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LANIKAI<br>サロン成長ヒアリングシート</h1>
+  <p>ご回答いただいた内容をもとに<br>最適なサポートプランをご提案いたします</p>
+</div>
+
+<div class="progress-container">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 22</div>
+</div>
+
+<!-- セクション1: 売上・数字の現状 -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">01</span>売上・数字の現状
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q1</div>
+    <div class="q-text">現在の平均月商はどのくらいですか？</div>
+    <div class="q-hint">直近3ヶ月の平均でOKです</div>
+    <select id="q1" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="50万円以下">50万円以下</option>
+      <option value="50〜60万円">50〜60万円</option>
+      <option value="60〜70万円">60〜70万円</option>
+      <option value="70〜80万円">70〜80万円</option>
+      <option value="80〜90万円">80〜90万円</option>
+      <option value="90〜100万円">90〜100万円</option>
+      <option value="100万円以上">100万円以上</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q2</div>
+    <div class="q-text">1日の平均施術人数は何名ですか？</div>
+    <select id="q2" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="3名以下">3名以下</option>
+      <option value="4名">4名</option>
+      <option value="5名">5名</option>
+      <option value="6名">6名</option>
+      <option value="7名以上">7名以上</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q3</div>
+    <div class="q-text">平均客単価はどのくらいですか？</div>
+    <div class="q-hint">なんとなくの感覚でOKです</div>
+    <select id="q3" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="4,000円以下">4,000円以下</option>
+      <option value="4,000〜5,000円">4,000〜5,000円</option>
+      <option value="5,000〜6,000円">5,000〜6,000円</option>
+      <option value="6,000〜7,000円">6,000〜7,000円</option>
+      <option value="7,000〜8,000円">7,000〜8,000円</option>
+      <option value="8,000円以上">8,000円以上</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q4</div>
+    <div class="q-text">一番よく出るメニューはどれですか？</div>
+    <div class="q-hint">複数選択OK</div>
+    <div class="check-group" id="q4">
+      <span class="check-btn" onclick="toggleCheck(this)">フラットラッシュ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">Wフラットラッシュ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">メガフラット</span>
+      <span class="check-btn" onclick="toggleCheck(this)">まつ毛パーマ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">エダムラッシュ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">パーマエクステ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">アイブロウ</span>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q5</div>
+    <div class="q-text">月の稼働日数は何日くらいですか？</div>
+    <select id="q5" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="18日以下">18日以下</option>
+      <option value="19〜20日">19〜20日</option>
+      <option value="21〜22日">21〜22日</option>
+      <option value="23〜24日">23〜24日</option>
+      <option value="25日以上">25日以上</option>
+    </select>
+  </div>
+</div>
+
+<!-- セクション2: お客様について -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">02</span>お客様について
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q6</div>
+    <div class="q-text">来てくださるお客様はどんな方が多いですか？</div>
+    <div class="q-hint">年齢層・ライフスタイル・来店のきっかけなど</div>
+    <textarea id="q6" oninput="updateProgress()" placeholder="例：30〜40代の主婦の方が多い、紹介で来る方が多い..."></textarea>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q7</div>
+    <div class="q-text">リピーターさんの来店周期はどのくらいですか？</div>
+    <select id="q7" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="2週間以内">2週間以内</option>
+      <option value="2〜3週間">2〜3週間</option>
+      <option value="3〜4週間">3〜4週間</option>
+      <option value="1ヶ月〜1.5ヶ月">1ヶ月〜1.5ヶ月</option>
+      <option value="1.5ヶ月以上">1.5ヶ月以上</option>
+      <option value="バラバラ">バラバラ</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q8</div>
+    <div class="q-text">リピート率はどのくらいだと感じますか？</div>
+    <select id="q8" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="90%以上">90%以上</option>
+      <option value="70〜90%">70〜90%</option>
+      <option value="50〜70%">50〜70%</option>
+      <option value="50%以下">50%以下</option>
+      <option value="把握できていない">把握できていない</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q9</div>
+    <div class="q-text">「こういうお客様にもっと来てほしい」という理想のお客様像はありますか？</div>
+    <textarea id="q9" oninput="updateProgress()" placeholder="例：客単価の高いメニューを選んでくれる方、定期的に通ってくれる方..."></textarea>
+  </div>
+</div>
+
+<!-- セクション3: 集客について -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">03</span>集客について
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q10</div>
+    <div class="q-text">新規のお客様はどこから来ていますか？</div>
+    <div class="q-hint">複数選択OK</div>
+    <div class="check-group" id="q10">
+      <span class="check-btn" onclick="toggleCheck(this)">ホットペッパー</span>
+      <span class="check-btn" onclick="toggleCheck(this)">Instagram</span>
+      <span class="check-btn" onclick="toggleCheck(this)">紹介</span>
+      <span class="check-btn" onclick="toggleCheck(this)">Google検索</span>
+      <span class="check-btn" onclick="toggleCheck(this)">Googleマップ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">チラシ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">通りがかり</span>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q11</div>
+    <div class="q-text">新規集客の中で、一番多いのはどれですか？</div>
+    <textarea id="q11" oninput="updateProgress()" placeholder="例：ほぼホットペッパーからです..."></textarea>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q12</div>
+    <div class="q-text">集客で一番しんどい・うまくいかないと感じることは？</div>
+    <textarea id="q12" oninput="updateProgress()" placeholder="例：HPBの掲載料が高い割に新規が少ない、リピートにつながらない..."></textarea>
+  </div>
+</div>
+
+<!-- セクション4: 価格・メニューについて -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">04</span>価格・メニューについて
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q13</div>
+    <div class="q-text">現在の価格設定について、ご自身ではどう感じていますか？</div>
+    <select id="q13" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="安すぎると感じている">安すぎると感じている</option>
+      <option value="少し安いかもしれない">少し安いかもしれない</option>
+      <option value="ちょうどいいと思う">ちょうどいいと思う</option>
+      <option value="高めかもしれない">高めかもしれない</option>
+      <option value="よくわからない">よくわからない</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q14</div>
+    <div class="q-text">値上げに対してどう思いますか？不安なことがあれば教えてください。</div>
+    <textarea id="q14" oninput="updateProgress()" placeholder="例：お客様が離れるのが怖い、いつかは上げたいけどタイミングがわからない..."></textarea>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q15</div>
+    <div class="q-text">今後やってみたいメニューや取り入れたい技術はありますか？</div>
+    <textarea id="q15" oninput="updateProgress()" placeholder="例：LEDエクステ、アイブロウメニュー強化、フェイシャル..."></textarea>
+  </div>
+</div>
+
+<!-- セクション5: SNS・発信について -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">05</span>SNS・発信について
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q16</div>
+    <div class="q-text">SNS（Instagram等）はどのくらい活用していますか？</div>
+    <select id="q16" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="ほぼ毎日投稿">ほぼ毎日投稿</option>
+      <option value="週に数回">週に数回</option>
+      <option value="月に数回">月に数回</option>
+      <option value="ほとんどしていない">ほとんどしていない</option>
+      <option value="アカウントがない">アカウントがない</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q17</div>
+    <div class="q-text">SNS発信でしんどい・続かないと感じることはありますか？</div>
+    <textarea id="q17" oninput="updateProgress()" placeholder="例：何を投稿したらいいかわからない、写真を撮る余裕がない..."></textarea>
+  </div>
+</div>
+
+<!-- セクション6: スタッフ採用について -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">06</span>スタッフ採用について
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q18</div>
+    <div class="q-text">スタッフ（業務委託）を入れたいとのことですが、いつ頃を目標にしていますか？</div>
+    <select id="q18" onchange="updateProgress()">
+      <option value="">選択してください</option>
+      <option value="すぐにでも">すぐにでも</option>
+      <option value="3ヶ月以内">3ヶ月以内</option>
+      <option value="半年以内">半年以内</option>
+      <option value="1年以内">1年以内</option>
+      <option value="売上が安定してから">売上が安定してから</option>
+    </select>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q19</div>
+    <div class="q-text">業務委託スタッフに求める条件はありますか？</div>
+    <div class="q-hint">経験年数・得意な技術・人柄・働き方など</div>
+    <textarea id="q19" oninput="updateProgress()" placeholder="例：経験3年以上、フラットラッシュができる方、週3以上入れる方..."></textarea>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q20</div>
+    <div class="q-text">スタッフを入れることで一番不安に感じることは？</div>
+    <textarea id="q20" oninput="updateProgress()" placeholder="例：自分と同じクオリティを保てるか、お客様を任せられるか..."></textarea>
+  </div>
+</div>
+
+<!-- セクション7: 未来ビジョン -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">07</span>未来のビジョン
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q21</div>
+    <div class="q-text">1年後、サロンがどうなっていたら最高ですか？</div>
+    <div class="q-hint">売上・働き方・お客様の層・スタッフ体制など、自由にイメージしてください</div>
+    <textarea id="q21" oninput="updateProgress()" placeholder="例：月100万安定、スタッフ1名、週休2日、指名のお客様で予約が埋まる..."></textarea>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q22</div>
+    <div class="q-text">3年後、5年後はどんなサロンにしていきたいですか？</div>
+    <div class="q-hint">店舗展開・ブランド化・ライフスタイルの変化など、何でもOKです</div>
+    <textarea id="q22" oninput="updateProgress()" placeholder="例：2店舗目を出したい、自分は現場を離れてマネジメントに回りたい、プライベートも充実させたい..."></textarea>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q23</div>
+    <div class="q-text">今、サポートで一番手伝ってほしいことは何ですか？</div>
+    <div class="q-hint">複数選択OK</div>
+    <div class="check-group" id="q23">
+      <span class="check-btn" onclick="toggleCheck(this)">客単価アップ</span>
+      <span class="check-btn" onclick="toggleCheck(this)">新規集客</span>
+      <span class="check-btn" onclick="toggleCheck(this)">リピート率UP</span>
+      <span class="check-btn" onclick="toggleCheck(this)">メニュー構成</span>
+      <span class="check-btn" onclick="toggleCheck(this)">値上げ戦略</span>
+      <span class="check-btn" onclick="toggleCheck(this)">SNS発信</span>
+      <span class="check-btn" onclick="toggleCheck(this)">スタッフ採用</span>
+      <span class="check-btn" onclick="toggleCheck(this)">仕組みづくり</span>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-label">Q24</div>
+    <div class="q-text">最後に、今感じているモヤモヤや聞きたいことがあれば自由に書いてください。</div>
+    <textarea id="q24" oninput="updateProgress()" placeholder="何でもOKです！"></textarea>
+  </div>
+</div>
+
+<div class="submit-area">
+  <button class="submit-btn" id="submitBtn" onclick="submitForm()">回答を送信する</button>
+</div>
+
+<div class="complete-overlay" id="completeOverlay">
+  <div class="complete-card">
+    <div class="complete-icon">✨</div>
+    <div class="complete-title">ご回答ありがとうございます！</div>
+    <div class="complete-msg">
+      いただいた内容をもとに<br>
+      最適なサポートプランを<br>
+      ご提案させていただきます。<br><br>
+      近日中にご連絡いたしますので<br>
+      少々お待ちください。
+    </div>
+  </div>
+</div>
+
+<script>
+const TOTAL_Q = 24;
+const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbwTFmSWAmGXabFljEiC1PgKQM97tJWjCZwwnCeEJnVLi6c-a0sJ1WjNBNPgPzH-PoYFpA/exec';
+
+function toggleCheck(el) {
+  el.classList.toggle('selected');
+  updateProgress();
+}
+
+function getAnswered() {
+  let count = 0;
+  for (let i = 1; i <= TOTAL_Q; i++) {
+    const el = document.getElementById('q' + i);
+    if (!el) continue;
+
+    if (el.tagName === 'SELECT') {
+      if (el.value) count++;
+    } else if (el.tagName === 'TEXTAREA') {
+      if (el.value.trim()) count++;
+    } else if (el.classList.contains('check-group')) {
+      if (el.querySelector('.selected')) count++;
+    }
+  }
+  return count;
+}
+
+function updateProgress() {
+  const answered = getAnswered();
+  const pct = Math.round((answered / TOTAL_Q) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = answered + ' / ' + TOTAL_Q;
+}
+
+function getValue(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+
+  if (el.tagName === 'SELECT') return el.value || '';
+  if (el.tagName === 'TEXTAREA') return el.value.trim();
+  if (el.classList.contains('check-group')) {
+    const selected = el.querySelectorAll('.selected');
+    return Array.from(selected).map(s => s.textContent).join(', ');
+  }
+  return '';
+}
+
+function submitForm() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  const data = {};
+  for (let i = 1; i <= TOTAL_Q; i++) {
+    data['Q' + i] = getValue('q' + i);
+  }
+
+  fetch(SPREADSHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    document.getElementById('completeOverlay').classList.add('show');
+  }).catch(() => {
+    document.getElementById('completeOverlay').classList.add('show');
+  });
+}
+</script>
+
+</body>
+</html>
