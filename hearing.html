@@ -612,11 +612,14 @@ function recalc() {
 }
 
 function submitForm() {
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
   var data = {};
 
   document.querySelectorAll('.question-card').forEach(function(card) {
     var qNum = card.querySelector('.q-number').textContent;
-    var qText = card.querySelector('.q-text').textContent;
     var answer = '';
 
     var ta = card.querySelector('textarea');
@@ -632,15 +635,24 @@ function submitForm() {
     }
 
     if (answer) {
-      data[qNum] = { question: qText, answer: answer };
+      data[qNum] = answer;
     }
   });
 
-  console.log('=== ヒアリングシート回答 ===');
-  console.log(JSON.stringify(data, null, 2));
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxozkYn401rL9jvwqgPGdWGDplCI9H3c0YmxUmEUnXTezqe1ogVYEa1URI5yW3-Yt30pA/exec';
 
-  document.getElementById('completeOverlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(function() {
+    document.getElementById('completeOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }).catch(function() {
+    document.getElementById('completeOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  });
 }
 </script>
 
