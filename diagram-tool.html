@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>文章図解化ツール</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.4.39/dist/index.iife.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
 
@@ -797,23 +797,25 @@ function setLoading(btnId, loading) {
   }
 }
 
-async function captureCard() {
+async function captureElement() {
   const el = document.getElementById('capture');
-  return await html2canvas(el, {
+  const dataUrl = await modernScreenshot.domToPng(el, {
     scale: 2,
-    useCORS: true,
     backgroundColor: '#ffffff',
-    logging: false,
+    style: {
+      margin: '0',
+    }
   });
+  return dataUrl;
 }
 
 async function downloadPNG() {
   setLoading('btn-png', true);
   try {
-    const canvas = await captureCard();
+    const dataUrl = await captureElement();
     const link = document.createElement('a');
     link.download = 'diagram.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = dataUrl;
     link.click();
     showToast('PNGをダウンロードしました');
   } catch (e) {
@@ -826,16 +828,18 @@ async function downloadPNG() {
 async function downloadPDF() {
   setLoading('btn-pdf', true);
   try {
-    const canvas = await captureCard();
-    const imgData = canvas.toDataURL('image/png');
+    const dataUrl = await captureElement();
     const { jsPDF } = window.jspdf;
 
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
+    // 画像サイズを取得
+    const img = new Image();
+    await new Promise((resolve) => {
+      img.onload = resolve;
+      img.src = dataUrl;
+    });
 
-    // カードの比率に合わせてPDFサイズを決定
-    const pdfWidth = 297; // A4横幅mm
-    const pdfHeight = (imgHeight / imgWidth) * pdfWidth;
+    const pdfWidth = 297;
+    const pdfHeight = (img.height / img.width) * pdfWidth;
 
     const pdf = new jsPDF({
       orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
@@ -843,7 +847,7 @@ async function downloadPDF() {
       format: [pdfWidth, pdfHeight],
     });
 
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
     pdf.save('diagram.pdf');
     showToast('PDFをダウンロードしました');
   } catch (e) {
