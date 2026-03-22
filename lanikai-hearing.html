@@ -636,31 +636,21 @@ function submitForm() {
     data['Q' + i] = getValue('q' + i);
   }
 
-  // hidden form + iframe方式で確実に送信
-  const iframe = document.createElement('iframe');
-  iframe.name = 'hidden_iframe';
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = SPREADSHEET_URL;
-  form.target = 'hidden_iframe';
-
-  const input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = 'data';
-  input.value = JSON.stringify(data);
-  form.appendChild(input);
-
-  document.body.appendChild(form);
-  form.submit();
+  // XMLHttpRequestで送信（日本語文字化け対策）
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', SPREADSHEET_URL);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+  xhr.onload = function() {
+    document.getElementById('completeOverlay').classList.add('show');
+  };
+  xhr.onerror = function() {
+    document.getElementById('completeOverlay').classList.add('show');
+  };
+  xhr.send('data=' + encodeURIComponent(JSON.stringify(data)));
 
   setTimeout(() => {
     document.getElementById('completeOverlay').classList.add('show');
-    form.remove();
-    iframe.remove();
-  }, 2000);
+  }, 3000);
 }
 </script>
 
