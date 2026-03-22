@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCP 店長用伝達シート - 明日からできる3つのこと</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    font-family: 'Noto Sans JP', 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    gap: 32px;
+  }
+
+  /* ===== ツールバー ===== */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px;
+    border-radius: 16px;
+    position: sticky;
+    top: 16px;
+    z-index: 50;
+  }
+
+  .toolbar-label {
+    font-size: 13px; font-weight: 700;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border: none; border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; color: #fff;
+  }
+
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:active { transform: translateY(0); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+  .btn-download .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1e1b4b; color: #fff;
+    padding: 12px 28px; border-radius: 12px;
+    font-size: 13px; font-weight: 700;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #34d399; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ===== 全カード共通 ===== */
+  .card {
+    width: 880px;
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  .deco-circle {
+    position: absolute; border-radius: 50%; pointer-events: none;
+  }
+
+  /* ===== 表紙カード ===== */
+  .cover-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #4a90d9 100%);
+    color: #fff;
+    padding: 56px 48px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  .cover-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255,255,255,0.06); }
+  .cover-deco-2 { bottom: -50px; left: -30px; width: 160px; height: 160px; background: rgba(255,255,255,0.04); }
+
+  .cover-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    padding: 6px 18px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 20px; position: relative; z-index: 1;
+  }
+
+  .cover-header h1 {
+    font-size: 32px; font-weight: 900;
+    margin-bottom: 12px; position: relative; z-index: 1;
+    line-height: 1.4;
+  }
+
+  .cover-header .subtitle {
+    font-size: 14px; color: rgba(255,255,255,0.7);
+    position: relative; z-index: 1;
+  }
+
+  .cover-body {
+    padding: 36px 48px;
+  }
+
+  .cover-intro {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 24px 28px;
+    border-left: 4px solid #4a90d9;
+  }
+
+  .cover-intro p {
+    font-size: 14px; color: #475569;
+    line-height: 1.8;
+  }
+
+  .cover-intro .highlight { color: #1e3a5f; font-weight: 700; }
+
+  .cover-steps {
+    display: flex; gap: 16px;
+    margin-top: 28px;
+  }
+
+  .cover-step-item {
+    flex: 1;
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 24px 16px;
+    text-align: center;
+    border: 1.5px solid #e2e8f0;
+  }
+
+  .cover-step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e3a5f, #4a90d9);
+    color: #fff;
+    font-size: 14px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+  }
+
+  .cover-step-item h3 {
+    font-size: 13px; font-weight: 800;
+    color: #1e293b; line-height: 1.4;
+  }
+
+  /* ===== アクションカード ===== */
+  .action-header {
+    padding: 36px 48px 28px;
+    display: flex; align-items: center; gap: 20px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .action-num {
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900; color: #fff;
+    flex-shrink: 0;
+  }
+
+  .num-blue { background: linear-gradient(135deg, #1e3a5f, #4a90d9); }
+  .num-orange { background: linear-gradient(135deg, #c2410c, #f97316); }
+  .num-emerald { background: linear-gradient(135deg, #065f46, #10b981); }
+
+  .action-header-text h2 {
+    font-size: 22px; font-weight: 900;
+    color: #1e293b; margin-bottom: 4px;
+  }
+
+  .action-header-text p {
+    font-size: 12px; color: #94a3b8;
+    font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  .action-body { padding: 32px 48px 40px; }
+
+  /* WHYセクション */
+  .why-box {
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    position: relative; overflow: hidden;
+  }
+
+  .why-blue { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+  .why-orange { background: #fff7ed; border: 1.5px solid #fed7aa; }
+  .why-emerald { background: #ecfdf5; border: 1.5px solid #a7f3d0; }
+
+  .why-label {
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .why-blue .why-label { color: #2563eb; }
+  .why-orange .why-label { color: #ea580c; }
+  .why-emerald .why-label { color: #059669; }
+
+  .why-box p {
+    font-size: 13.5px; color: #475569;
+    line-height: 1.8;
+  }
+
+  .why-box .em { font-weight: 700; }
+  .em-blue { color: #1d4ed8; }
+  .em-orange { color: #c2410c; }
+  .em-emerald { color: #047857; }
+
+  /* HOWセクション */
+  .how-section {
+    margin-bottom: 24px;
+  }
+
+  .how-label {
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 14px;
+  }
+
+  .how-flow {
+    display: flex; align-items: stretch; gap: 0;
+  }
+
+  .how-step {
+    flex: 1;
+    text-align: center;
+    padding: 20px 12px;
+    border-radius: 14px;
+  }
+
+  .how-step .icon-circle {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+
+  .how-step .icon-circle svg { width: 24px; height: 24px; }
+
+  .icon-blue { background: #dbeafe; }
+  .icon-blue svg { fill: #2563eb; }
+  .icon-orange { background: #ffedd5; }
+  .icon-orange svg { fill: #ea580c; }
+  .icon-emerald { background: #d1fae5; }
+  .icon-emerald svg { fill: #059669; }
+
+  .how-step h4 {
+    font-size: 12px; font-weight: 800;
+    color: #1e293b; margin-bottom: 4px;
+  }
+
+  .how-step p {
+    font-size: 10.5px; color: #64748b; line-height: 1.5;
+  }
+
+  .how-arrow {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; flex-shrink: 0;
+  }
+
+  .how-arrow svg {
+    width: 16px; height: 16px;
+    fill: none; stroke: #cbd5e1;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* TIPセクション */
+  .tip-box {
+    border-radius: 14px;
+    padding: 18px 22px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+
+  .tip-blue { background: #f0f9ff; border: 1px solid #bae6fd; }
+  .tip-orange { background: #fffbeb; border: 1px solid #fde68a; }
+  .tip-emerald { background: #f0fdf4; border: 1px solid #bbf7d0; }
+
+  .tip-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tip-icon-blue { background: #dbeafe; }
+  .tip-icon-orange { background: #ffedd5; }
+  .tip-icon-emerald { background: #d1fae5; }
+
+  .tip-icon svg { width: 16px; height: 16px; }
+
+  .tip-text {
+    font-size: 12.5px; color: #475569; line-height: 1.7;
+  }
+
+  .tip-text strong { font-weight: 700; }
+
+  /* サンドイッチ図解 */
+  .sandwich {
+    display: flex; flex-direction: column; gap: 0;
+    margin-bottom: 24px;
+  }
+
+  .sandwich-layer {
+    padding: 18px 24px;
+    display: flex; align-items: center; gap: 16px;
+    position: relative;
+  }
+
+  .sandwich-layer:first-child { border-radius: 16px 16px 0 0; }
+  .sandwich-layer:last-child { border-radius: 0 0 16px 16px; }
+
+  .layer-mother {
+    background: #fef2f2;
+    border: 1.5px solid #fecaca;
+    border-bottom: none;
+  }
+  .layer-mother:last-child {
+    border-top: none;
+    border-bottom: 1.5px solid #fecaca;
+  }
+
+  .layer-father {
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+  }
+
+  .layer-tag {
+    font-size: 10px; font-weight: 800;
+    padding: 3px 10px; border-radius: 8px;
+    letter-spacing: 1px; flex-shrink: 0;
+  }
+
+  .tag-mother { background: #fee2e2; color: #dc2626; }
+  .tag-father { background: #dbeafe; color: #2563eb; }
+
+  .sandwich-layer p {
+    font-size: 12.5px; color: #475569; line-height: 1.6;
+    flex: 1;
+  }
+
+  .sandwich-label {
+    font-size: 10px; font-weight: 700;
+    color: #94a3b8;
+    text-align: center; padding: 6px 0;
+  }
+
+  /* シェイピング・ステップ */
+  .shaping-flow {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .shaping-step {
+    flex: 1;
+    text-align: center;
+    padding: 20px 12px;
+    border-radius: 14px;
+    background: #ecfdf5;
+    border: 1.5px solid #a7f3d0;
+  }
+
+  .shaping-step .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #059669; color: #fff;
+    font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+  }
+
+  .shaping-step h4 {
+    font-size: 12px; font-weight: 800;
+    color: #065f46; margin-bottom: 4px;
+  }
+
+  .shaping-step p {
+    font-size: 10.5px; color: #64748b;
+  }
+
+  .shaping-arrow {
+    flex-shrink: 0;
+  }
+
+  .shaping-arrow svg {
+    width: 20px; height: 20px;
+    fill: none; stroke: #a7f3d0;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* 比較 */
+  .compare-row {
+    display: flex; gap: 16px; margin-bottom: 24px;
+  }
+
+  .compare-item {
+    flex: 1;
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .compare-bad {
+    background: #fef2f2;
+    border: 1.5px solid #fecaca;
+  }
+
+  .compare-good {
+    background: #ecfdf5;
+    border: 1.5px solid #a7f3d0;
+  }
+
+  .compare-mark {
+    font-size: 24px; font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .compare-bad .compare-mark { color: #dc2626; }
+  .compare-good .compare-mark { color: #059669; }
+
+  .compare-item p {
+    font-size: 12.5px; color: #475569; line-height: 1.6;
+  }
+
+  /* ===== 締めカード ===== */
+  .closing-header {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    color: #fff;
+    padding: 48px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  .closing-deco-1 { top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(167,139,250,0.1); }
+  .closing-deco-2 { bottom: -40px; left: -20px; width: 100px; height: 100px; background: rgba(240,147,251,0.08); }
+
+  .closing-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 18px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .closing-icon svg {
+    width: 30px; height: 30px;
+    fill: none; stroke: #a78bfa;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .closing-header h2 {
+    font-size: 24px; font-weight: 900;
+    color: #c4b5fd;
+    margin-bottom: 12px;
+    position: relative; z-index: 1;
+    line-height: 1.5;
+  }
+
+  .closing-header p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    position: relative; z-index: 1;
+    line-height: 1.8;
+  }
+
+  .closing-body { padding: 36px 48px; }
+
+  .closing-message {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 28px;
+    border-left: 4px solid #7c3aed;
+    margin-bottom: 24px;
+  }
+
+  .closing-message p {
+    font-size: 14px; color: #475569;
+    line-height: 1.9;
+  }
+
+  .closing-message .em-purple { color: #6d28d9; font-weight: 700; }
+
+  .closing-skills {
+    display: flex; gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .closing-skill {
+    flex: 1;
+    text-align: center;
+    padding: 20px 14px;
+    border-radius: 14px;
+    background: #f5f3ff;
+    border: 1.5px solid #e9d5ff;
+  }
+
+  .closing-skill svg {
+    width: 28px; height: 28px;
+    fill: none; stroke: #7c3aed;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    margin-bottom: 8px;
+  }
+
+  .closing-skill h4 {
+    font-size: 12px; font-weight: 800;
+    color: #5b21b6;
+  }
+
+  .closing-cta {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  .closing-cta-deco { top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(167,139,250,0.12); }
+
+  .closing-cta p {
+    font-size: 15px; font-weight: 800;
+    color: #c4b5fd;
+    line-height: 1.8;
+    position: relative; z-index: 1;
+  }
+
+  /* フッター */
+  .card-footer {
+    padding: 14px 44px;
+    border-top: 1px solid #f1f5f9;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .card-footer small { font-size: 10px; color: #d1d5db; }
+  .card-footer .dots { display: flex; gap: 4px; }
+  .card-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
+  .card-footer .dots span.active { background: #4a90d9; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">全ページ一括ダウンロード:</span>
+  <button class="btn-download btn-pdf" onclick="downloadAllPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF（全ページ）</span>
+  </button>
+</div>
+
+<!-- ==================== 表紙 ==================== -->
+<div class="card" id="page-0">
+  <div class="cover-header">
+    <div class="deco-circle cover-deco-1"></div>
+    <div class="deco-circle cover-deco-2"></div>
+    <div class="cover-tag">Name Calling Project</div>
+    <h1>明日からできる<br>3つのこと</h1>
+    <p class="subtitle">NCP 店長用 伝達シート</p>
+  </div>
+  <div class="cover-body">
+    <div class="cover-intro">
+      <p>セミナーで学んだ内容を、スタッフに伝える時の手引きです。<br>
+      <span class="highlight">全部を一度に伝える必要はありません。</span><br>
+      まず自分がやってみて、その実感をもとに一人ずつ伝えてください。</p>
+    </div>
+    <div class="cover-steps">
+      <div class="cover-step-item">
+        <div class="cover-step-num">1</div>
+        <h3>お客様のお名前を<br>3回呼ぶ</h3>
+      </div>
+      <div class="cover-step-item">
+        <div class="cover-step-num">2</div>
+        <h3>サンドイッチ方式<br>で伝える</h3>
+      </div>
+      <div class="cover-step-item">
+        <div class="cover-step-num">3</div>
+        <h3>小さな一歩を<br>褒める</h3>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <small>NCP - Name Calling Project</small>
+    <div class="dots"><span class="active"></span><span></span><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- ==================== カード1: 名前を3回呼ぶ ==================== -->
+<div class="card" id="page-1">
+  <div class="action-header">
+    <div class="action-num num-blue">1</div>
+    <div class="action-header-text">
+      <h2>お客様のお名前を3回呼ぶ</h2>
+      <p>Name Calling Basic</p>
+    </div>
+  </div>
+  <div class="action-body">
+    <div class="why-box why-blue">
+      <div class="why-label">なぜやるのか</div>
+      <p>名前を呼ぶだけで、お客様の<span class="em em-blue">好感度・信頼度が無意識に上がる</span>（ネームコーリング効果）。<br>月1回の来店でも、名前を3回呼べば<span class="em em-blue">「3回、私のことを見てくれた」</span>という記憶が残る。</p>
+    </div>
+
+    <div class="how-section">
+      <div class="how-label">いつ呼ぶか ─ 3つのタイミング</div>
+      <div class="how-flow">
+        <div class="how-step">
+          <div class="icon-circle icon-blue">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" opacity="0.2"/><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 22V12h6v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </div>
+          <h4>入客時</h4>
+          <p>「○○さん、<br>お待ちしてました」</p>
+        </div>
+        <div class="how-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="how-step">
+          <div class="icon-circle icon-blue">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" opacity="0.2"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 14s1.5 2 4 2 4-2 4-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="9" x2="9.01" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="9" x2="15.01" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h4>施術中</h4>
+          <p>「○○さん、<br>今日はどうされますか」</p>
+        </div>
+        <div class="how-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="how-step">
+          <div class="icon-circle icon-blue">
+            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" opacity="0.2" fill="currentColor"/><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </div>
+          <h4>お見送り</h4>
+          <p>「○○さん、<br>ありがとうございました」</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box tip-blue">
+      <div class="tip-icon tip-icon-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </div>
+      <div class="tip-text"><strong>覚えられない時は：</strong>入客前にカルテや予約表で確認する。完璧に暗記する必要はない。<strong>確認する仕組みを準備しておくのがプロ。</strong></div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <small>NCP - Name Calling Project</small>
+    <div class="dots"><span></span><span class="active"></span><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- ==================== カード2: サンドイッチ方式 ==================== -->
+<div class="card" id="page-2">
+  <div class="action-header">
+    <div class="action-num num-orange">2</div>
+    <div class="action-header-text">
+      <h2>スタッフへの伝え方：サンドイッチ方式</h2>
+      <p>Communication Method</p>
+    </div>
+  </div>
+  <div class="action-body">
+    <div class="why-box why-orange">
+      <div class="why-label">基本の形</div>
+      <p><span class="em em-orange">母性（受容）→ 父性（指示）→ 母性（期待）</span><br>
+      相手を受け入れてから伝え、最後に期待で包む。この順番が大事。</p>
+    </div>
+
+    <div class="how-section">
+      <div class="how-label">具体例 ─ 3ステップの会話</div>
+      <div class="sandwich">
+        <div class="sandwich-layer layer-mother">
+          <span class="layer-tag tag-mother">母性</span>
+          <p>「○○さんの接客、最近すごくいいなと思ってるんよ」</p>
+        </div>
+        <div class="sandwich-label">↓ 受容してから ↓</div>
+        <div class="sandwich-layer layer-father">
+          <span class="layer-tag tag-father">父性</span>
+          <p>「そこにプラスして、お客様のお名前をもっと呼んでみて。信頼関係がさらに深まると思う」</p>
+        </div>
+        <div class="sandwich-label">↓ 指示してから ↓</div>
+        <div class="sandwich-layer layer-mother">
+          <span class="layer-tag tag-mother">母性</span>
+          <p>「○○さんならできると思ってるから、楽しみにしてるわ」</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box tip-orange">
+      <div class="tip-icon tip-icon-orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="tip-text"><strong>ポイント：</strong>最初の母性が一番難しい。<strong>普段からスタッフのいいところを探す習慣</strong>が、この一言を生む。</div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <small>NCP - Name Calling Project</small>
+    <div class="dots"><span></span><span></span><span class="active"></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- ==================== カード3: シェイピング ==================== -->
+<div class="card" id="page-3">
+  <div class="action-header">
+    <div class="action-num num-emerald">3</div>
+    <div class="action-header-text">
+      <h2>小さな一歩を褒める（シェイピング）</h2>
+      <p>Positive Reinforcement</p>
+    </div>
+  </div>
+  <div class="action-body">
+    <div class="why-box why-emerald">
+      <div class="why-label">考え方</div>
+      <p>いきなり完璧を求めない。<span class="em em-emerald">小さな成功の積み重ね</span>が、<span class="em em-emerald">自発的な行動</span>に変わる。</p>
+    </div>
+
+    <div class="how-section">
+      <div class="how-label">ステップアップの流れ</div>
+      <div class="shaping-flow">
+        <div class="shaping-step">
+          <div class="step-num">1</div>
+          <h4>小さな目標</h4>
+          <p>「今日1人だけ<br>名前呼んでみて」</p>
+        </div>
+        <div class="shaping-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="shaping-step">
+          <div class="step-num">2</div>
+          <h4>できたら褒める</h4>
+          <p>「やってたね、<br>見てたよ」</p>
+        </div>
+        <div class="shaping-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="shaping-step">
+          <div class="step-num">3</div>
+          <h4>次のステップ</h4>
+          <p>「次は2人<br>いけそう？」</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="how-section">
+      <div class="how-label">褒め方のコツ ─ 成果じゃなく過程を褒める</div>
+      <div class="compare-row">
+        <div class="compare-item compare-bad">
+          <div class="compare-mark">×</div>
+          <p>「リピート率<br>上がったね」</p>
+        </div>
+        <div class="compare-item compare-good">
+          <div class="compare-mark">○</div>
+          <p>「今日お客様の名前<br>呼んでたね、見てたよ」</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box tip-emerald">
+      <div class="tip-icon tip-icon-emerald">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="tip-text"><strong>目標はスタッフ自身に決めてもらう：</strong>「今日1人から始めてみる？それとも2人いけそう？」<strong>自分で決めた目標は、言われた目標より続く。</strong></div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <small>NCP - Name Calling Project</small>
+    <div class="dots"><span></span><span></span><span></span><span class="active"></span><span></span></div>
+  </div>
+</div>
+
+<!-- ==================== 締めカード ==================== -->
+<div class="card" id="page-4">
+  <div class="closing-header">
+    <div class="deco-circle closing-deco-1"></div>
+    <div class="deco-circle closing-deco-2"></div>
+    <div class="closing-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <h2>このプロジェクトの<br>本当のゴール</h2>
+    <p>名前を呼ぶこと自体がゴールではありません</p>
+  </div>
+  <div class="closing-body">
+    <div class="closing-message">
+      <p>お客様を大切に想う気持ちが先にあって、<span class="em-purple">その表現として名前を呼ぶ</span>のです。</p>
+    </div>
+
+    <div class="closing-skills">
+      <div class="closing-skill">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <h4>想いを伝える力</h4>
+      </div>
+      <div class="closing-skill">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h4>巻き込む力</h4>
+      </div>
+      <div class="closing-skill">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        <h4>積み重ねる力</h4>
+      </div>
+    </div>
+
+    <div class="closing-message" style="border-left-color: #1e3a5f; margin-bottom: 24px;">
+      <p>谷会長は、このプロジェクトに<span class="em-purple">1年間という時間</span>をかけて取り組むことを決めてくれました。<br><br>
+      これは「名前を呼べるようになればいい」という話ではなく、皆さんがこの1年を通して<span class="em-purple">スタッフと一丸になれるマネジメント力</span>を身につけてほしいという、強い想いがあってのことです。</p>
+    </div>
+
+    <div class="closing-cta">
+      <div class="deco-circle closing-cta-deco"></div>
+      <p>せっかくいただいたこの1年間を<br>しっかり使って一緒に作っていきましょう。<br>NCPで掴んだ感覚は<br>今後どんな取り組みにもそのまま活きてきます。</p>
+    </div>
+  </div>
+  <div class="card-footer">
+    <small>NCP - Name Calling Project</small>
+    <div class="dots"><span></span><span></span><span></span><span></span><span class="active"></span></div>
+  </div>
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+
+async function downloadAllPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const { jsPDF } = window.jspdf;
+    let pdf = null;
+
+    for (let i = 0; i <= 4; i++) {
+      const el = document.getElementById('page-' + i);
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdfW = 210;
+      const pdfH = (canvas.height / canvas.width) * pdfW;
+
+      if (i === 0) {
+        pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
+      } else {
+        pdf.addPage([pdfW, pdfH], 'portrait');
+      }
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+    }
+
+    pdf.save('NCP_伝達シート.pdf');
+    showToast('PDFをダウンロードしました（全5ページ）');
+  } catch (e) {
+    console.error(e);
+    showToast('エラーが発生しました');
+  }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>
