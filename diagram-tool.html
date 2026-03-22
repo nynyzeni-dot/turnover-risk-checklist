@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文章図解化ツール</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    font-family: 'Noto Sans JP', 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px;
+    gap: 24px;
+  }
+
+  /* ===== ツールバー ===== */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px;
+    border-radius: 16px;
+  }
+
+  .toolbar-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    margin-right: 4px;
+  }
+
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .btn-download:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  .btn-download:active {
+    transform: translateY(0);
+  }
+
+  .btn-download:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-download svg {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+  }
+
+  .btn-png {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+  }
+
+  .btn-pdf {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+  }
+
+  /* スピナー */
+  .btn-download .spinner {
+    display: none;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  .btn-download.loading .btn-text { opacity: 0.7; }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* 成功メッセージ */
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1e1b4b;
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast svg {
+    width: 18px; height: 18px;
+    fill: none;
+    stroke: #34d399;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ===== カード ===== */
+  .diagram-card {
+    width: 880px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow:
+      0 4px 6px rgba(0,0,0,0.05),
+      0 20px 60px rgba(0,0,0,0.12),
+      0 0 0 1px rgba(0,0,0,0.03);
+    overflow: hidden;
+  }
+
+  /* ===== ヘッダー ===== */
+  .diagram-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    color: #fff;
+    padding: 48px 48px 44px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .diagram-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .diagram-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -30px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .header-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    position: relative; z-index: 1;
+  }
+
+  .diagram-header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    position: relative; z-index: 1;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  .diagram-header .subtitle {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    position: relative; z-index: 1;
+  }
+
+  /* ===== メイン ===== */
+  .diagram-body {
+    padding: 44px 44px 40px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #a78bfa;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #e9d5ff, transparent);
+  }
+
+  /* フロー */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 8px;
+  }
+
+  .flow-step {
+    flex: 1;
+    text-align: center;
+    padding: 28px 16px;
+    border-radius: 18px;
+    position: relative;
+  }
+
+  .flow-step .step-number {
+    position: absolute;
+    top: 10px; left: 14px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #d1d5db;
+  }
+
+  .flow-step .icon-wrap {
+    width: 80px; height: 80px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+  }
+
+  .flow-step .icon-wrap svg {
+    width: 40px; height: 40px;
+  }
+
+  .flow-step:nth-child(1) .icon-wrap {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    box-shadow: 0 6px 20px rgba(239,68,68,0.15);
+  }
+  .flow-step:nth-child(1) .icon-wrap svg { fill: #dc2626; }
+
+  .flow-step:nth-child(3) .icon-wrap {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    box-shadow: 0 6px 20px rgba(245,158,11,0.15);
+  }
+  .flow-step:nth-child(3) .icon-wrap svg { fill: #d97706; }
+
+  .flow-step:nth-child(5) .icon-wrap {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.15);
+  }
+  .flow-step:nth-child(5) .icon-wrap svg { fill: #059669; }
+
+  .flow-step h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e1b4b;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  .flow-step p {
+    font-size: 12.5px;
+    color: #6b7280;
+    line-height: 1.7;
+  }
+
+  .kw-red    { color: #dc2626; font-weight: 700; }
+  .kw-amber  { color: #d97706; font-weight: 700; }
+  .kw-green  { color: #059669; font-weight: 700; }
+
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    flex-shrink: 0;
+  }
+
+  .flow-arrow .arrow-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+  }
+
+  .flow-arrow .arrow-icon svg {
+    width: 18px; height: 18px;
+    fill: none; stroke: #fff;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* 接続 */
+  .connector {
+    text-align: center;
+    padding: 16px 0 32px;
+    position: relative;
+  }
+
+  .connector::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 2px; height: 14px;
+    background: linear-gradient(to bottom, #e9d5ff, #a78bfa);
+  }
+
+  .connector .connector-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    border: 1.5px solid #ddd6fe;
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6d28d9;
+  }
+
+  .connector .connector-badge svg {
+    width: 16px; height: 16px;
+    fill: none; stroke: #7c3aed;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .connector::after {
+    content: '';
+    position: absolute;
+    bottom: 4px; left: 50%;
+    transform: translateX(-50%);
+    width: 2px; height: 14px;
+    background: linear-gradient(to bottom, #a78bfa, #e9d5ff);
+  }
+
+  /* 比較 */
+  .comparison {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .comparison-box {
+    flex: 1;
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .comparison-box::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+  }
+
+  .comparison-box.before {
+    background: linear-gradient(160deg, #fff5f5, #fee2e2);
+    border: 2px solid #fecaca;
+  }
+  .comparison-box.before::before { background: rgba(239,68,68,0.06); }
+
+  .comparison-box.after {
+    background: linear-gradient(160deg, #ecfdf5, #d1fae5);
+    border: 2px solid #a7f3d0;
+  }
+  .comparison-box.after::before { background: rgba(16,185,129,0.06); }
+
+  .comparison-box .label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+
+  .comparison-box.before .label { color: #ef4444; }
+  .comparison-box.after .label { color: #059669; }
+
+  .comparison-box .big-number {
+    font-size: 52px;
+    font-weight: 900;
+    margin-bottom: 2px;
+    position: relative; z-index: 1;
+    line-height: 1.1;
+  }
+
+  .comparison-box.before .big-number {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .comparison-box.after .big-number {
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .comparison-box .desc {
+    font-size: 12.5px;
+    color: #6b7280;
+    position: relative; z-index: 1;
+    margin-bottom: 12px;
+  }
+
+  .desc-steps {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    position: relative; z-index: 1;
+    margin-bottom: 16px;
+  }
+
+  .step-pill {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .before .step-pill { background: rgba(239,68,68,0.1); color: #dc2626; }
+  .after .step-pill { background: rgba(16,185,129,0.1); color: #059669; }
+
+  .progress-bar-wrap {
+    position: relative; z-index: 1;
+    height: 8px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0 12px;
+  }
+
+  .progress-bar-fill { height: 100%; border-radius: 4px; }
+
+  .before .progress-bar-fill {
+    width: 100%;
+    background: linear-gradient(90deg, #fca5a5, #ef4444);
+  }
+
+  .after .progress-bar-fill {
+    width: 10%;
+    background: linear-gradient(90deg, #6ee7b7, #10b981);
+  }
+
+  .vs-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    gap: 8px;
+  }
+
+  .vs-badge {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 16px rgba(30,27,75,0.3);
+  }
+
+  .speed-badge {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(124,58,237,0.35);
+    white-space: nowrap;
+  }
+
+  /* ボトムCTA */
+  .bottom-cta {
+    margin-top: 36px;
+    text-align: center;
+    padding: 32px 28px;
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bottom-cta::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(167,139,250,0.1);
+  }
+
+  .bottom-cta::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(240,147,251,0.08);
+  }
+
+  .bottom-cta .cta-icon {
+    width: 48px; height: 48px;
+    margin: 0 auto 14px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bottom-cta .cta-icon svg {
+    width: 26px; height: 26px;
+    fill: none; stroke: #a78bfa;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bottom-cta .cta-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+
+  .bottom-cta .cta-headline {
+    font-size: 22px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #c4b5fd, #f0abfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.5;
+    position: relative; z-index: 1;
+  }
+
+  /* フッター */
+  .diagram-footer {
+    padding: 16px 44px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .diagram-footer small {
+    font-size: 10px;
+    color: #d1d5db;
+  }
+
+  .diagram-footer .dots {
+    display: flex; gap: 4px;
+  }
+
+  .diagram-footer .dots span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #e5e7eb;
+  }
+
+  .diagram-footer .dots span:first-child { background: #a78bfa; }
+</style>
+</head>
+<body>
+
+<!-- トースト通知 -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text">ダウンロード完了</span>
+</div>
+
+<!-- ツールバー -->
+<div class="toolbar">
+  <span class="toolbar-label">ダウンロード:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <path d="M14 2v6h6"/>
+      <path d="M12 18v-6"/>
+      <path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+
+<!-- 図解カード -->
+<div class="diagram-card" id="capture">
+
+  <div class="diagram-header">
+    <div class="header-tag">Visual Thinking</div>
+    <h1>なぜ今「図解」が必要なのか</h1>
+    <p class="subtitle">AI時代の情報過多を乗り越えるビジュアル思考</p>
+  </div>
+
+  <div class="diagram-body">
+
+    <div class="section-label">Problem &rarr; Solution</div>
+
+    <div class="flow">
+      <div class="flow-step">
+        <span class="step-number">01</span>
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"/>
+            <path d="M14 2v4a2 2 0 0 0 2 2h4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="7" y="12" width="6" height="1.2" rx="0.6" opacity="0.5"/>
+            <rect x="7" y="14.5" width="8" height="1.2" rx="0.6" opacity="0.5"/>
+            <rect x="7" y="17" width="5" height="1.2" rx="0.6" opacity="0.5"/>
+          </svg>
+        </div>
+        <h3>文章の<span class="kw-red">爆発的増加</span></h3>
+        <p>AIの普及により<br>生成されるテキスト量が<br><span class="kw-red">急激に増加</span>している</p>
+      </div>
+
+      <div class="flow-arrow">
+        <div class="arrow-icon">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <span class="step-number">02</span>
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="10" r="7" opacity="0.2"/>
+            <circle cx="12" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M9 9 C9 8, 10.5 7.5, 10.5 9 C10.5 9.8, 9.5 10, 9 9.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M15 9 C15 8, 13.5 7.5, 13.5 9 C13.5 9.8, 14.5 10, 15 9.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="9" y1="12.5" x2="15" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M9 19 C9 16, 15 16, 15 19" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>読むだけでは<br><span class="kw-amber">非効率</span>な時代に</h3>
+        <p>大量のテキストを読んで<br>理解するのは<br><span class="kw-amber">コスパが悪すぎる</span></p>
+      </div>
+
+      <div class="flow-arrow">
+        <div class="arrow-icon">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <span class="step-number">03</span>
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" opacity="0.15"/>
+            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="1.5"/>
+            <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>図解にすれば<br><span class="kw-green">一瞬で伝わる</span></h3>
+        <p>視覚的に整理すれば<br><span class="kw-green">誰でもパッと見て</span><br>本質がわかる</p>
+      </div>
+    </div>
+
+    <div class="connector">
+      <div class="connector-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        じゃあ、どれくらい変わるのか？
+      </div>
+    </div>
+
+    <div class="section-label">Before vs After</div>
+
+    <div class="comparison">
+      <div class="comparison-box before">
+        <div class="label">文章で理解</div>
+        <div class="big-number">5分</div>
+        <div class="desc">かかってしまう</div>
+        <div class="desc-steps">
+          <span class="step-pill">読む</span>
+          <span class="step-pill">整理する</span>
+          <span class="step-pill">理解する</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="vs-divider">
+        <div class="vs-badge">VS</div>
+        <div class="speed-badge">10x 速い</div>
+      </div>
+
+      <div class="comparison-box after">
+        <div class="label">図解で理解</div>
+        <div class="big-number">30秒</div>
+        <div class="desc">で分かる</div>
+        <div class="desc-steps">
+          <span class="step-pill">見る</span>
+          <span class="step-pill">分かる</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-cta">
+      <div class="cta-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </div>
+      <div class="cta-text">情報があふれる時代だからこそ</div>
+      <div class="cta-headline">「見ればわかる」が<br>最強の武器になる</div>
+    </div>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>Generated by AI Diagram Tool</small>
+    <div class="dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (loading) {
+    btn.classList.add('loading');
+    btn.disabled = true;
+  } else {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+async function captureCard() {
+  const el = document.getElementById('capture');
+  return await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+  });
+}
+
+async function downloadPNG() {
+  setLoading('btn-png', true);
+  try {
+    const canvas = await captureCard();
+    const link = document.createElement('a');
+    link.download = 'diagram.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('PNGをダウンロードしました');
+  } catch (e) {
+    console.error(e);
+    showToast('エラーが発生しました');
+  }
+  setLoading('btn-png', false);
+}
+
+async function downloadPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const canvas = await captureCard();
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    // カードの比率に合わせてPDFサイズを決定
+    const pdfWidth = 297; // A4横幅mm
+    const pdfHeight = (imgHeight / imgWidth) * pdfWidth;
+
+    const pdf = new jsPDF({
+      orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: [pdfWidth, pdfHeight],
+    });
+
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save('diagram.pdf');
+    showToast('PDFをダウンロードしました');
+  } catch (e) {
+    console.error(e);
+    showToast('エラーが発生しました');
+  }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>
