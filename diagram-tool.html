@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>文章図解化ツール</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.4.39/dist/index.iife.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
 
@@ -28,7 +28,6 @@
     align-items: center;
     gap: 12px;
     background: rgba(255,255,255,0.06);
-    backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.1);
     padding: 12px 24px;
     border-radius: 16px;
@@ -53,7 +52,6 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
-    position: relative;
   }
 
   .btn-download:hover {
@@ -61,9 +59,7 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.3);
   }
 
-  .btn-download:active {
-    transform: translateY(0);
-  }
+  .btn-download:active { transform: translateY(0); }
 
   .btn-download:disabled {
     opacity: 0.6;
@@ -86,7 +82,6 @@
     color: #fff;
   }
 
-  /* スピナー */
   .btn-download .spinner {
     display: none;
     width: 14px; height: 14px;
@@ -98,17 +93,13 @@
 
   .btn-download.loading .spinner { display: block; }
   .btn-download.loading .btn-icon { display: none; }
-  .btn-download.loading .btn-text { opacity: 0.7; }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* 成功メッセージ */
+  /* トースト */
   .toast {
     position: fixed;
-    top: 24px;
-    left: 50%;
+    top: 24px; left: 50%;
     transform: translateX(-50%) translateY(-80px);
     background: #1e1b4b;
     color: #fff;
@@ -124,14 +115,11 @@
     gap: 8px;
   }
 
-  .toast.show {
-    transform: translateX(-50%) translateY(0);
-  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
 
   .toast svg {
     width: 18px; height: 18px;
-    fill: none;
-    stroke: #34d399;
+    fill: none; stroke: #34d399;
     stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -142,10 +130,6 @@
     width: 880px;
     background: #ffffff;
     border-radius: 24px;
-    box-shadow:
-      0 4px 6px rgba(0,0,0,0.05),
-      0 20px 60px rgba(0,0,0,0.12),
-      0 0 0 1px rgba(0,0,0,0.03);
     overflow: hidden;
   }
 
@@ -159,28 +143,28 @@
     overflow: hidden;
   }
 
-  .diagram-header::before {
-    content: '';
+  /* 疑似要素→リアル要素 */
+  .deco-circle {
     position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .header-deco-1 {
     top: -40px; right: -40px;
     width: 200px; height: 200px;
-    border-radius: 50%;
     background: rgba(255,255,255,0.08);
   }
 
-  .diagram-header::after {
-    content: '';
-    position: absolute;
+  .header-deco-2 {
     bottom: -60px; left: -30px;
     width: 160px; height: 160px;
-    border-radius: 50%;
     background: rgba(255,255,255,0.06);
   }
 
   .header-tag {
     display: inline-block;
     background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(10px);
     padding: 6px 18px;
     border-radius: 20px;
     font-size: 11px;
@@ -197,7 +181,6 @@
     letter-spacing: 1px;
     margin-bottom: 10px;
     position: relative; z-index: 1;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
   }
 
   .diagram-header .subtitle {
@@ -207,9 +190,7 @@
   }
 
   /* ===== メイン ===== */
-  .diagram-body {
-    padding: 44px 44px 40px;
-  }
+  .diagram-body { padding: 44px 44px 40px; }
 
   .section-label {
     font-size: 10px;
@@ -218,16 +199,6 @@
     letter-spacing: 3px;
     color: #a78bfa;
     margin-bottom: 22px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, #e9d5ff, transparent);
   }
 
   /* フロー */
@@ -262,27 +233,22 @@
     margin: 0 auto 18px;
   }
 
-  .flow-step .icon-wrap svg {
-    width: 40px; height: 40px;
-  }
+  .flow-step .icon-wrap svg { width: 40px; height: 40px; }
 
-  .flow-step:nth-child(1) .icon-wrap {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    box-shadow: 0 6px 20px rgba(239,68,68,0.15);
+  .icon-red {
+    background: #fee2e2;
   }
-  .flow-step:nth-child(1) .icon-wrap svg { fill: #dc2626; }
+  .icon-red svg { fill: #dc2626; }
 
-  .flow-step:nth-child(3) .icon-wrap {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    box-shadow: 0 6px 20px rgba(245,158,11,0.15);
+  .icon-amber {
+    background: #fef3c7;
   }
-  .flow-step:nth-child(3) .icon-wrap svg { fill: #d97706; }
+  .icon-amber svg { fill: #d97706; }
 
-  .flow-step:nth-child(5) .icon-wrap {
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    box-shadow: 0 6px 20px rgba(16,185,129,0.15);
+  .icon-green {
+    background: #d1fae5;
   }
-  .flow-step:nth-child(5) .icon-wrap svg { fill: #059669; }
+  .icon-green svg { fill: #059669; }
 
   .flow-step h3 {
     font-size: 16px;
@@ -317,7 +283,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(102,126,234,0.3);
   }
 
   .flow-arrow .arrow-icon svg {
@@ -335,20 +300,24 @@
     position: relative;
   }
 
-  .connector::before {
-    content: '';
+  .connector-line-top,
+  .connector-line-bottom {
     position: absolute;
-    top: 0; left: 50%;
+    left: 50%;
     transform: translateX(-50%);
-    width: 2px; height: 14px;
-    background: linear-gradient(to bottom, #e9d5ff, #a78bfa);
+    width: 2px;
+    height: 14px;
+    background: #a78bfa;
   }
+
+  .connector-line-top { top: 0; }
+  .connector-line-bottom { bottom: 4px; }
 
   .connector .connector-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    background: #f5f3ff;
     border: 1.5px solid #ddd6fe;
     padding: 10px 24px;
     border-radius: 30px;
@@ -363,15 +332,6 @@
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-  }
-
-  .connector::after {
-    content: '';
-    position: absolute;
-    bottom: 4px; left: 50%;
-    transform: translateX(-50%);
-    width: 2px; height: 14px;
-    background: linear-gradient(to bottom, #a78bfa, #e9d5ff);
   }
 
   /* 比較 */
@@ -390,25 +350,26 @@
     overflow: hidden;
   }
 
-  .comparison-box::before {
-    content: '';
+  .comparison-box.before {
+    background: #fee2e2;
+    border: 2px solid #fecaca;
+  }
+
+  .comparison-box.after {
+    background: #d1fae5;
+    border: 2px solid #a7f3d0;
+  }
+
+  .comparison-deco {
     position: absolute;
     top: -20px; right: -20px;
     width: 80px; height: 80px;
     border-radius: 50%;
+    pointer-events: none;
   }
 
-  .comparison-box.before {
-    background: linear-gradient(160deg, #fff5f5, #fee2e2);
-    border: 2px solid #fecaca;
-  }
-  .comparison-box.before::before { background: rgba(239,68,68,0.06); }
-
-  .comparison-box.after {
-    background: linear-gradient(160deg, #ecfdf5, #d1fae5);
-    border: 2px solid #a7f3d0;
-  }
-  .comparison-box.after::before { background: rgba(16,185,129,0.06); }
+  .before .comparison-deco { background: rgba(239,68,68,0.08); }
+  .after .comparison-deco { background: rgba(16,185,129,0.08); }
 
   .comparison-box .label {
     font-size: 11px;
@@ -430,12 +391,8 @@
     line-height: 1.1;
   }
 
-  .comparison-box.before .big-number {
-    color: #dc2626;
-  }
-  .comparison-box.after .big-number {
-    color: #059669;
-  }
+  .comparison-box.before .big-number { color: #dc2626; }
+  .comparison-box.after .big-number { color: #059669; }
 
   .comparison-box .desc {
     font-size: 12.5px;
@@ -459,29 +416,21 @@
     font-weight: 600;
   }
 
-  .before .step-pill { background: rgba(239,68,68,0.1); color: #dc2626; }
-  .after .step-pill { background: rgba(16,185,129,0.1); color: #059669; }
+  .before .step-pill { background: rgba(239,68,68,0.15); color: #dc2626; }
+  .after .step-pill { background: rgba(16,185,129,0.15); color: #059669; }
 
   .progress-bar-wrap {
     position: relative; z-index: 1;
     height: 8px;
-    background: rgba(0,0,0,0.06);
+    background: rgba(0,0,0,0.08);
     border-radius: 4px;
     overflow: hidden;
     margin: 0 12px;
   }
 
   .progress-bar-fill { height: 100%; border-radius: 4px; }
-
-  .before .progress-bar-fill {
-    width: 100%;
-    background: linear-gradient(90deg, #fca5a5, #ef4444);
-  }
-
-  .after .progress-bar-fill {
-    width: 10%;
-    background: linear-gradient(90deg, #6ee7b7, #10b981);
-  }
+  .before .progress-bar-fill { width: 100%; background: #ef4444; }
+  .after .progress-bar-fill { width: 10%; background: #10b981; }
 
   .vs-divider {
     display: flex;
@@ -495,7 +444,7 @@
   .vs-badge {
     width: 44px; height: 44px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    background: #1e1b4b;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -503,17 +452,15 @@
     font-size: 12px;
     font-weight: 900;
     letter-spacing: 1px;
-    box-shadow: 0 4px 16px rgba(30,27,75,0.3);
   }
 
   .speed-badge {
-    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    background: #7c3aed;
     color: #fff;
     font-size: 11px;
     font-weight: 800;
     padding: 4px 12px;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(124,58,237,0.35);
     white-space: nowrap;
   }
 
@@ -522,28 +469,28 @@
     margin-top: 36px;
     text-align: center;
     padding: 32px 28px;
-    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    background: #1e1b4b;
     border-radius: 20px;
     position: relative;
     overflow: hidden;
   }
 
-  .bottom-cta::before {
-    content: '';
+  .cta-deco-1 {
     position: absolute;
     top: -30px; right: -30px;
     width: 120px; height: 120px;
     border-radius: 50%;
-    background: rgba(167,139,250,0.1);
+    background: rgba(167,139,250,0.12);
+    pointer-events: none;
   }
 
-  .bottom-cta::after {
-    content: '';
+  .cta-deco-2 {
     position: absolute;
     bottom: -40px; left: -20px;
     width: 100px; height: 100px;
     border-radius: 50%;
     background: rgba(240,147,251,0.08);
+    pointer-events: none;
   }
 
   .bottom-cta .cta-icon {
@@ -588,14 +535,9 @@
     align-items: center;
   }
 
-  .diagram-footer small {
-    font-size: 10px;
-    color: #d1d5db;
-  }
+  .diagram-footer small { font-size: 10px; color: #d1d5db; }
 
-  .diagram-footer .dots {
-    display: flex; gap: 4px;
-  }
+  .diagram-footer .dots { display: flex; gap: 4px; }
 
   .diagram-footer .dots span {
     width: 6px; height: 6px;
@@ -608,14 +550,13 @@
 </head>
 <body>
 
-<!-- トースト通知 -->
 <div class="toast" id="toast">
   <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-  <span id="toast-text">ダウンロード完了</span>
+  <span id="toast-text"></span>
 </div>
 
 <!-- ツールバー -->
-<div class="toolbar">
+<div class="toolbar" id="toolbar">
   <span class="toolbar-label">ダウンロード:</span>
   <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
     <span class="spinner"></span>
@@ -642,6 +583,8 @@
 <div class="diagram-card" id="capture">
 
   <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
     <div class="header-tag">Visual Thinking</div>
     <h1>なぜ今「図解」が必要なのか</h1>
     <p class="subtitle">AI時代の情報過多を乗り越えるビジュアル思考</p>
@@ -649,12 +592,12 @@
 
   <div class="diagram-body">
 
-    <div class="section-label">Problem &rarr; Solution</div>
+    <div class="section-label">Problem → Solution</div>
 
     <div class="flow">
       <div class="flow-step">
         <span class="step-number">01</span>
-        <div class="icon-wrap">
+        <div class="icon-wrap icon-red">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"/>
             <path d="M14 2v4a2 2 0 0 0 2 2h4" fill="none" stroke="currentColor" stroke-width="1.5"/>
@@ -675,7 +618,7 @@
 
       <div class="flow-step">
         <span class="step-number">02</span>
-        <div class="icon-wrap">
+        <div class="icon-wrap icon-amber">
           <svg viewBox="0 0 24 24">
             <circle cx="12" cy="10" r="7" opacity="0.2"/>
             <circle cx="12" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/>
@@ -697,7 +640,7 @@
 
       <div class="flow-step">
         <span class="step-number">03</span>
-        <div class="icon-wrap">
+        <div class="icon-wrap icon-green">
           <svg viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" opacity="0.15"/>
             <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/>
@@ -715,16 +658,19 @@
     </div>
 
     <div class="connector">
+      <div class="connector-line-top"></div>
       <div class="connector-badge">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
         じゃあ、どれくらい変わるのか？
       </div>
+      <div class="connector-line-bottom"></div>
     </div>
 
     <div class="section-label">Before vs After</div>
 
     <div class="comparison">
       <div class="comparison-box before">
+        <div class="comparison-deco"></div>
         <div class="label">文章で理解</div>
         <div class="big-number">5分</div>
         <div class="desc">かかってしまう</div>
@@ -744,6 +690,7 @@
       </div>
 
       <div class="comparison-box after">
+        <div class="comparison-deco"></div>
         <div class="label">図解で理解</div>
         <div class="big-number">30秒</div>
         <div class="desc">で分かる</div>
@@ -758,6 +705,8 @@
     </div>
 
     <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
       <div class="cta-icon">
         <svg viewBox="0 0 24 24">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
@@ -779,43 +728,36 @@
 </div>
 
 <script>
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  document.getElementById('toast-text').textContent = message;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function setLoading(btnId, loading) {
-  const btn = document.getElementById(btnId);
-  if (loading) {
-    btn.classList.add('loading');
-    btn.disabled = true;
-  } else {
-    btn.classList.remove('loading');
-    btn.disabled = false;
-  }
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
 }
 
-async function captureElement() {
+async function captureCard() {
   const el = document.getElementById('capture');
-  const dataUrl = await modernScreenshot.domToPng(el, {
+  return await html2canvas(el, {
     scale: 2,
+    useCORS: true,
     backgroundColor: '#ffffff',
-    style: {
-      margin: '0',
-    }
+    logging: false,
   });
-  return dataUrl;
 }
 
 async function downloadPNG() {
   setLoading('btn-png', true);
   try {
-    const dataUrl = await captureElement();
+    const canvas = await captureCard();
     const link = document.createElement('a');
     link.download = 'diagram.png';
-    link.href = dataUrl;
+    link.href = canvas.toDataURL('image/png');
     link.click();
     showToast('PNGをダウンロードしました');
   } catch (e) {
@@ -828,26 +770,20 @@ async function downloadPNG() {
 async function downloadPDF() {
   setLoading('btn-pdf', true);
   try {
-    const dataUrl = await captureElement();
+    const canvas = await captureCard();
+    const imgData = canvas.toDataURL('image/png');
     const { jsPDF } = window.jspdf;
 
-    // 画像サイズを取得
-    const img = new Image();
-    await new Promise((resolve) => {
-      img.onload = resolve;
-      img.src = dataUrl;
-    });
-
-    const pdfWidth = 297;
-    const pdfHeight = (img.height / img.width) * pdfWidth;
+    // カードは縦長なので、幅をA4幅(210mm)に合わせて高さを比率計算
+    const pdfW = 210;
+    const pdfH = (canvas.height / canvas.width) * pdfW;
 
     const pdf = new jsPDF({
-      orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
+      orientation: 'portrait',
       unit: 'mm',
-      format: [pdfWidth, pdfHeight],
+      format: [pdfW, pdfH],
     });
-
-    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
     pdf.save('diagram.pdf');
     showToast('PDFをダウンロードしました');
   } catch (e) {
