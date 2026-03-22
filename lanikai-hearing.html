@@ -636,36 +636,17 @@ function submitForm() {
     data['Q' + i] = getValue('q' + i);
   }
 
-  // 隠しiframe + form方式で確実に送信
-  let iframe = document.getElementById('hidden_iframe');
-  if (!iframe) {
-    iframe = document.createElement('iframe');
-    iframe.id = 'hidden_iframe';
-    iframe.name = 'hidden_iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-  }
+  // GETリクエストで送信（最も確実な方法）
+  const url = SPREADSHEET_URL + '?data=' + encodeURIComponent(JSON.stringify(data));
+  const img = new Image();
+  img.onload = img.onerror = function() {
+    document.getElementById('completeOverlay').classList.add('show');
+  };
+  img.src = url;
 
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = SPREADSHEET_URL;
-  form.target = 'hidden_iframe';
-  form.style.display = 'none';
-
-  const input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = 'data';
-  input.value = JSON.stringify(data);
-  form.appendChild(input);
-
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
-
-  // 送信完了表示
   setTimeout(() => {
     document.getElementById('completeOverlay').classList.add('show');
-  }, 2000);
+  }, 3000);
 }
 </script>
 
