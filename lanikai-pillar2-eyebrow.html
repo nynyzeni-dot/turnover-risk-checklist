@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LANIKAI 課題2：アイブロウ導入</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 40px; gap: 24px;
+  }
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px; border-radius: 16px;
+  }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); }
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border: none; border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-download .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1e1b4b; color: #fff; padding: 12px 28px;
+    border-radius: 12px; font-size: 13px; font-weight: 700;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #34d399; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .diagram-card { width: 900px; background: #ffffff; border-radius: 24px; overflow: hidden; }
+
+  .diagram-header {
+    background: linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%);
+    color: #fff; padding: 44px 48px 36px; position: relative; overflow: hidden;
+  }
+  .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
+  .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(251,191,36,0.15); }
+  .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(245,158,11,0.1); }
+  .header-tag {
+    display: inline-block; background: rgba(251,191,36,0.3);
+    padding: 6px 18px; border-radius: 20px; font-size: 11px;
+    font-weight: 600; letter-spacing: 2px; margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+  .diagram-header h1 {
+    font-size: 28px; font-weight: 900; letter-spacing: 1px;
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .diagram-header .subtitle {
+    font-size: 14px; color: rgba(255,255,255,0.7);
+    position: relative; z-index: 1;
+  }
+
+  .diagram-body { padding: 36px 44px 40px; }
+  .section-label {
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 3px; color: #d97706; margin-bottom: 16px;
+  }
+
+  /* 課題ボックス */
+  .issue-box {
+    background: #fffbeb; border: 2px solid #fde68a;
+    border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .issue-icon {
+    width: 48px; height: 48px; background: #fef3c7;
+    border-radius: 14px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .issue-icon svg { width: 24px; height: 24px; fill: #d97706; }
+  .issue-text { font-size: 13px; font-weight: 700; color: #92400e; line-height: 1.7; }
+  .issue-text span { color: #d97706; font-weight: 900; }
+
+  /* 2つの戦略 */
+  .strategy-grid {
+    display: flex; gap: 16px; margin-bottom: 32px;
+  }
+  .strategy-card {
+    flex: 1; border-radius: 18px; padding: 28px 22px;
+    position: relative; overflow: hidden;
+  }
+  .strategy-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 80px; height: 80px; border-radius: 50%; pointer-events: none;
+  }
+  .strategy-a { background: linear-gradient(180deg, #fef3c7, #fffbeb); border: 2px solid #fde68a; }
+  .strategy-a .strategy-deco { background: rgba(217,119,6,0.08); }
+  .strategy-b { background: linear-gradient(180deg, #ede9fe, #f5f3ff); border: 2px solid #ddd6fe; }
+  .strategy-b .strategy-deco { background: rgba(124,58,237,0.08); }
+  .strategy-badge {
+    display: inline-block; padding: 4px 14px; border-radius: 10px;
+    font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 14px; position: relative; z-index: 1;
+  }
+  .strategy-a .strategy-badge { background: #d97706; color: #fff; }
+  .strategy-b .strategy-badge { background: #7c3aed; color: #fff; }
+  .strategy-icon {
+    width: 52px; height: 52px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; position: relative; z-index: 1;
+  }
+  .strategy-a .strategy-icon { background: rgba(217,119,6,0.12); }
+  .strategy-b .strategy-icon { background: rgba(124,58,237,0.12); }
+  .strategy-icon svg { width: 26px; height: 26px; }
+  .strategy-a .strategy-icon svg { fill: #d97706; }
+  .strategy-b .strategy-icon svg { fill: #7c3aed; }
+  .strategy-card h3 {
+    font-size: 16px; font-weight: 900; color: #1e1b4b;
+    margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .strategy-detail {
+    font-size: 12px; color: #4b5563; line-height: 1.8;
+    position: relative; z-index: 1;
+  }
+  .strategy-detail strong { font-weight: 800; }
+  .strategy-a .strategy-detail strong { color: #d97706; }
+  .strategy-b .strategy-detail strong { color: #7c3aed; }
+  .strategy-highlight {
+    margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+    font-size: 12px; font-weight: 800; text-align: center;
+    position: relative; z-index: 1;
+  }
+  .strategy-a .strategy-highlight { background: rgba(217,119,6,0.1); color: #d97706; }
+  .strategy-b .strategy-highlight { background: rgba(124,58,237,0.1); color: #7c3aed; }
+
+  /* 競合テーブル */
+  .price-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    margin-bottom: 32px; border-radius: 16px; overflow: hidden;
+    border: 1px solid #e2e8f0;
+  }
+  .price-table th {
+    background: #92400e; color: #fff; padding: 12px 14px;
+    font-size: 11px; font-weight: 800; letter-spacing: 1px; text-align: center;
+  }
+  .price-table td {
+    padding: 10px 14px; font-size: 12px; text-align: center;
+    border-bottom: 1px solid #f1f5f9; color: #374151;
+  }
+  .price-table tr:last-child td { border-bottom: none; }
+  .price-table .row-even { background: #f8fafc; }
+  .star { color: #f59e0b; font-size: 12px; }
+  .price-highlight {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 800;
+  }
+  .ph-low { background: #dcfce7; color: #059669; }
+  .ph-mid { background: #fef3c7; color: #d97706; }
+  .ph-high { background: #fee2e2; color: #dc2626; }
+  .ph-target { background: #ede9fe; color: #7c3aed; }
+
+  /* セットメニュー提案 */
+  .set-proposal {
+    display: flex; gap: 16px; margin-bottom: 32px;
+  }
+  .set-card {
+    flex: 1; border-radius: 16px; padding: 24px 20px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .set-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 70px; height: 70px; border-radius: 50%; pointer-events: none;
+  }
+  .set-basic { background: #f8fafc; border: 2px solid #e2e8f0; }
+  .set-basic .set-deco { background: rgba(148,163,184,0.08); }
+  .set-standard { background: #fffbeb; border: 2px solid #fde68a; }
+  .set-standard .set-deco { background: rgba(217,119,6,0.08); }
+  .set-premium { background: #f5f3ff; border: 2px solid #ddd6fe; }
+  .set-premium .set-deco { background: rgba(124,58,237,0.08); }
+  .set-tag {
+    display: inline-block; padding: 4px 12px; border-radius: 8px;
+    font-size: 9px; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .set-basic .set-tag { background: #94a3b8; color: #fff; }
+  .set-standard .set-tag { background: #d97706; color: #fff; }
+  .set-premium .set-tag { background: #7c3aed; color: #fff; }
+  .set-name {
+    font-size: 13px; font-weight: 800; color: #1e1b4b;
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .set-price {
+    font-size: 32px; font-weight: 900; margin-bottom: 4px;
+    position: relative; z-index: 1;
+  }
+  .set-basic .set-price { color: #64748b; }
+  .set-standard .set-price { color: #d97706; }
+  .set-premium .set-price { color: #7c3aed; }
+  .set-desc {
+    font-size: 11px; color: #6b7280; line-height: 1.7;
+    position: relative; z-index: 1;
+  }
+
+  /* ポイント */
+  .point-box {
+    background: #fffbeb; border: 2px solid #fde68a;
+    border-radius: 16px; padding: 24px; margin-bottom: 32px;
+  }
+  .point-title {
+    font-size: 14px; font-weight: 900; color: #92400e; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .point-title svg { width: 22px; height: 22px; fill: #d97706; }
+  .point-list { list-style: none; }
+  .point-list li {
+    font-size: 13px; color: #374151; line-height: 1.8;
+    padding: 6px 0; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .point-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #d97706; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; margin-top: 2px;
+  }
+  .point-check svg {
+    width: 12px; height: 12px; fill: none; stroke: #fff;
+    stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* CTA */
+  .bottom-cta {
+    text-align: center; padding: 28px; background: #92400e;
+    border-radius: 20px; position: relative; overflow: hidden;
+  }
+  .cta-deco-1 {
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(251,191,36,0.12); pointer-events: none;
+  }
+  .cta-deco-2 {
+    position: absolute; bottom: -40px; left: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(245,158,11,0.08); pointer-events: none;
+  }
+  .cta-text {
+    font-size: 13px; color: rgba(255,255,255,0.6);
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .cta-headline {
+    font-size: 20px; font-weight: 900; color: #fde68a;
+    line-height: 1.6; position: relative; z-index: 1;
+  }
+
+  .diagram-footer {
+    padding: 16px 44px; border-top: 1px solid #f3f4f6;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .diagram-footer small { font-size: 10px; color: #d1d5db; }
+  .diagram-footer .dots { display: flex; gap: 4px; }
+  .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
+  .diagram-footer .dots span:nth-child(2) { background: #d97706; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">ダウンロード:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+
+<div class="diagram-card" id="capture">
+
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="header-tag">TASK 2 / 3</div>
+    <h1>アイブロウ導入戦略</h1>
+    <p class="subtitle">既存客の単価UPと、新しい集客の入口を同時に作る</p>
+  </div>
+
+  <div class="diagram-body">
+
+    <!-- 現状の課題 -->
+    <div class="section-label">Current Issue</div>
+    <div class="issue-box">
+      <div class="issue-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      </div>
+      <div class="issue-text">
+        アンケート回答：安いクーポンで来店した方の<span>リピート率が低い</span><br>
+        → まつエクの安いクーポンで集客する構造自体を見直す必要がある
+      </div>
+    </div>
+
+    <!-- 2つの戦略 -->
+    <div class="section-label">Two Strategies</div>
+    <div class="strategy-grid">
+      <div class="strategy-card strategy-a">
+        <div class="strategy-deco"></div>
+        <div class="strategy-badge">STRATEGY A</div>
+        <div class="strategy-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <h3>既存客へのアイブロウ追加</h3>
+        <div class="strategy-detail">
+          今来ているまつエクのお客様に<br>
+          <strong>アイブロウをセットで提案</strong><br>
+          <br>
+          まつエク + アイブロウで<br>
+          <strong>客単価が自然にUP</strong><br>
+          新しい提案で満足度も向上
+        </div>
+        <div class="strategy-highlight">客単価UP × 満足度UP</div>
+      </div>
+      <div class="strategy-card strategy-b">
+        <div class="strategy-deco"></div>
+        <div class="strategy-badge">STRATEGY B</div>
+        <div class="strategy-icon">
+          <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </div>
+        <h3>アイブロウで新規集客</h3>
+        <div class="strategy-detail">
+          新メニューだから<br>
+          <strong>最初から適正価格で出せる</strong><br>
+          <br>
+          安売りクーポン競争に<br>
+          巻き込まれない<br>
+          <strong>質の高いお客様が集まる</strong>
+        </div>
+        <div class="strategy-highlight">安売り脱却 × 新規獲得</div>
+      </div>
+    </div>
+
+    <!-- 競合価格 -->
+    <div class="section-label">Area Competition - アイブロウ</div>
+    <table class="price-table">
+      <thead>
+        <tr>
+          <th>サロン名</th>
+          <th>口コミ</th>
+          <th>アイブロウ単体</th>
+          <th>まつエク+アイブロウ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ウルド</td>
+          <td><span class="star">&#9733;</span> 4.9 (288件)</td>
+          <td>2,900〜4,900円</td>
+          <td>セットあり</td>
+        </tr>
+        <tr class="row-even">
+          <td>tres mignon</td>
+          <td><span class="star">&#9733;</span> 5.0 (44件)</td>
+          <td>3,900〜5,100円</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>レアファースト</td>
+          <td><span class="star">&#9733;</span> -</td>
+          <td>3,500〜4,500円</td>
+          <td>7,400円</td>
+        </tr>
+        <tr class="row-even">
+          <td>nico</td>
+          <td><span class="star">&#9733;</span> 4.9 (74件)</td>
+          <td>3,980〜5,000円</td>
+          <td>セットあり</td>
+        </tr>
+        <tr>
+          <td>affe+</td>
+          <td><span class="star">&#9733;</span> 4.5 (209件)</td>
+          <td>4,200〜5,200円</td>
+          <td>6,700〜8,200円</td>
+        </tr>
+        <tr class="row-even">
+          <td>veretta.cacil</td>
+          <td><span class="star">&#9733;</span> -</td>
+          <td>3,850円</td>
+          <td>6,600〜7,150円</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- セットメニュー提案 -->
+    <div class="section-label">Set Menu Proposal</div>
+    <div class="set-proposal">
+      <div class="set-card set-basic">
+        <div class="set-deco"></div>
+        <div class="set-tag">BASIC</div>
+        <div class="set-name">アイブロウ単体</div>
+        <div class="set-price">4,500円</div>
+        <div class="set-desc">
+          アイブロウWAX<br>
+          or スタイリング<br>
+          <br>
+          新規集客の入口に
+        </div>
+      </div>
+      <div class="set-card set-standard">
+        <div class="set-deco"></div>
+        <div class="set-tag">STANDARD</div>
+        <div class="set-name">まつエク+アイブロウ</div>
+        <div class="set-price">9,000円</div>
+        <div class="set-desc">
+          フラットラッシュ<br>
+          + アイブロウセット<br>
+          <br>
+          客単価9,100円の主力に
+        </div>
+      </div>
+      <div class="set-card set-premium">
+        <div class="set-deco"></div>
+        <div class="set-tag">PREMIUM</div>
+        <div class="set-name">フルアイケアセット</div>
+        <div class="set-price">11,000円</div>
+        <div class="set-desc">
+          まつエク + アイブロウ<br>
+          + コーティング・TR<br>
+          <br>
+          高単価リピーター向け
+        </div>
+      </div>
+    </div>
+
+    <!-- ポイント -->
+    <div class="point-box">
+      <div class="point-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        アイブロウ導入のメリット
+      </div>
+      <ul class="point-list">
+        <li>
+          <div class="point-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>新メニューだから<strong>最初から適正価格で設定できる</strong>（安売り不要）</span>
+        </li>
+        <li>
+          <div class="point-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>セットメニューで<strong>客単価9,000円が自然な価格</strong>に見える</span>
+        </li>
+        <li>
+          <div class="point-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>既存のまつエク客に追加提案 → <strong>施術時間+30分で+3,000円</strong></span>
+        </li>
+        <li>
+          <div class="point-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>「目元トータルケア」は<strong>他サロンとの差別化</strong>になる</span>
+        </li>
+        <li>
+          <div class="point-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>課題1（価格見直し）との<strong>相乗効果</strong>で100万円が現実的に</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- CTA -->
+    <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
+      <div class="cta-text">安いクーポンでの集客から脱却し</div>
+      <div class="cta-headline">アイブロウを武器に<br>「価格ではなく価値で選ばれるサロン」へ</div>
+    </div>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>LANIKAI Hearing Report - Task 2/3</small>
+    <div class="dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+async function captureCard() {
+  return await html2canvas(document.getElementById('capture'), {
+    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+  });
+}
+async function downloadPNG() {
+  setLoading('btn-png', true);
+  try {
+    const c = await captureCard();
+    const a = document.createElement('a');
+    a.download = 'lanikai-eyebrow-strategy.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+    showToast('PNGをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-png', false);
+}
+async function downloadPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const c = await captureCard();
+    const { jsPDF } = window.jspdf;
+    const w = 210, h = (c.height/c.width)*w;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[w,h] });
+    pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save('lanikai-eyebrow-strategy.pdf');
+    showToast('PDFをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>
