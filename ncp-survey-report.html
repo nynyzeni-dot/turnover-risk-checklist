@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCP アンケート報告</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a2e;
+    font-family: 'Noto Sans JP', 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px;
+    gap: 24px;
+  }
+
+  /* ===== Toolbar ===== */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px;
+    border-radius: 16px;
+  }
+  .toolbar-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    margin-right: 4px;
+  }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:active { transform: translateY(0); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-download .spinner {
+    display: none;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1e1b4b;
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg {
+    width: 18px; height: 18px;
+    fill: none; stroke: #34d399;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ===== Card ===== */
+  .diagram-card {
+    width: 900px;
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  /* ===== Header ===== */
+  .diagram-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 40%, #1e3a5f 100%);
+    color: #fff;
+    padding: 44px 48px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .header-deco-1 {
+    top: -50px; right: -50px;
+    width: 220px; height: 220px;
+    background: rgba(212,175,55,0.08);
+  }
+  .header-deco-2 {
+    bottom: -70px; left: -40px;
+    width: 180px; height: 180px;
+    background: rgba(212,175,55,0.06);
+  }
+  .header-deco-3 {
+    top: 20px; left: 60px;
+    width: 60px; height: 60px;
+    background: rgba(255,255,255,0.04);
+  }
+  .header-tag {
+    display: inline-block;
+    background: rgba(212,175,55,0.25);
+    color: #f0d060;
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+  .diagram-header h1 {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+  .diagram-header .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    position: relative; z-index: 1;
+    line-height: 1.6;
+  }
+  .header-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 20px;
+    position: relative; z-index: 1;
+  }
+  .header-stat {
+    text-align: center;
+  }
+  .header-stat .stat-num {
+    font-size: 28px;
+    font-weight: 900;
+    color: #f0d060;
+    line-height: 1.2;
+  }
+  .header-stat .stat-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* ===== Body ===== */
+  .diagram-body { padding: 40px 44px 36px; }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e3a5f;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .sec-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title .sec-icon svg {
+    width: 16px; height: 16px;
+  }
+  .section-sub {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-bottom: 18px;
+    padding-left: 38px;
+  }
+
+  /* Survey row */
+  .survey-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .survey-card {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+  }
+  .survey-card.full-width {
+    grid-column: 1 / -1;
+  }
+  .survey-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .bar-item {
+    margin-bottom: 10px;
+  }
+  .bar-item:last-child { margin-bottom: 0; }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .bar-label-text {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+  }
+  .bar-label-value {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1e3a5f;
+  }
+  .bar-track {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s;
+  }
+  .bar-navy { background: linear-gradient(90deg, #1e3a5f, #2c5282); }
+  .bar-blue { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .bar-slate { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
+  .bar-amber { background: linear-gradient(90deg, #d97706, #f59e0b); }
+  .bar-rose { background: linear-gradient(90deg, #e11d48, #f43f5e); }
+  .bar-teal { background: linear-gradient(90deg, #0d9488, #14b8a6); }
+  .bar-gold { background: linear-gradient(90deg, #b8860b, #d4a f37); }
+
+  /* Divider */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+    margin: 8px 0 24px;
+  }
+
+  /* ===== Highlight comparison ===== */
+  .highlight-section {
+    background: linear-gradient(135deg, #fefce8 0%, #fff7ed 100%);
+    border: 2px solid #fbbf24;
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .highlight-deco {
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(251,191,36,0.1);
+    pointer-events: none;
+  }
+  .highlight-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #92400e;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative; z-index: 1;
+  }
+  .highlight-title svg {
+    width: 20px; height: 20px;
+    fill: #f59e0b;
+  }
+
+  .change-grid {
+    display: grid;
+    grid-template-columns: 1fr 50px 1fr;
+    gap: 0;
+    align-items: stretch;
+    position: relative; z-index: 1;
+  }
+  .change-box {
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .change-box.before-box {
+    background: #fff;
+    border: 1.5px solid #fca5a5;
+  }
+  .change-box.after-box {
+    background: #fff;
+    border: 1.5px solid #86efac;
+  }
+  .change-box .change-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .before-box .change-label { color: #dc2626; }
+  .after-box .change-label { color: #059669; }
+  .change-box .change-big {
+    font-size: 42px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .before-box .change-big { color: #dc2626; }
+  .after-box .change-big { color: #059669; }
+  .change-box .change-desc {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .arrow-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .arrow-badge {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .arrow-badge svg {
+    width: 20px; height: 20px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ===== Insight cards ===== */
+  .insight-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .insight-card {
+    border-radius: 14px;
+    padding: 22px 18px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .insight-card .insight-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+  }
+  .insight-card .insight-icon svg {
+    width: 22px; height: 22px;
+  }
+  .insight-card h4 {
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .insight-card p {
+    font-size: 11px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .insight-blue {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+  }
+  .insight-blue .insight-icon { background: #dbeafe; }
+  .insight-blue .insight-icon svg { fill: #2563eb; }
+  .insight-blue h4 { color: #1e40af; }
+  .insight-blue p { color: #64748b; }
+
+  .insight-green {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+  .insight-green .insight-icon { background: #dcfce7; }
+  .insight-green .insight-icon svg { fill: #059669; }
+  .insight-green h4 { color: #166534; }
+  .insight-green p { color: #64748b; }
+
+  .insight-purple {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+  }
+  .insight-purple .insight-icon { background: #f3e8ff; }
+  .insight-purple .insight-icon svg { fill: #7c3aed; }
+  .insight-purple h4 { color: #5b21b6; }
+  .insight-purple p { color: #64748b; }
+
+  /* ===== Seminar detail ===== */
+  .seminar-highlights {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .s-card {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+  }
+  .s-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .s-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: #475569;
+    font-weight: 500;
+  }
+  .s-list-item:last-child { margin-bottom: 0; }
+  .s-rank {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .rank-1 { background: #d4af37; }
+  .rank-2 { background: #94a3b8; }
+  .rank-3 { background: #b87333; }
+  .rank-4 { background: #cbd5e1; }
+  .s-count {
+    margin-left: auto;
+    font-weight: 800;
+    color: #1e3a5f;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* ===== Bottom CTA ===== */
+  .bottom-cta {
+    background: linear-gradient(135deg, #1e3a5f, #2c5282);
+    border-radius: 18px;
+    padding: 28px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-deco-1 {
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.1);
+    pointer-events: none;
+  }
+  .cta-deco-2 {
+    position: absolute;
+    bottom: -40px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+  .bottom-cta .cta-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+  .bottom-cta .cta-headline {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f0d060;
+    line-height: 1.6;
+    position: relative; z-index: 1;
+  }
+  .bottom-cta .cta-note {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 12px;
+    position: relative; z-index: 1;
+  }
+
+  /* Footer */
+  .diagram-footer {
+    padding: 14px 44px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .diagram-footer small { font-size: 10px; color: #cbd5e1; }
+  .diagram-footer .dots { display: flex; gap: 4px; }
+  .diagram-footer .dots span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #e5e7eb;
+  }
+  .diagram-footer .dots span:first-child { background: #d4af37; }
+  .diagram-footer .dots span:nth-child(2) { background: #1e3a5f; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar" id="toolbar">
+  <span class="toolbar-label">ダウンロード:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <path d="M14 2v6h6"/>
+      <path d="M12 18v-6"/>
+      <path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+
+<!-- Card -->
+<div class="diagram-card" id="capture">
+
+  <!-- Header -->
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="deco-circle header-deco-3"></div>
+    <div class="header-tag">NCP SURVEY REPORT</div>
+    <h1>ネームコーリングプロジェクト<br>アンケート報告書</h1>
+    <p class="subtitle">セミナー実施前後のスタッフ意識変化レポート</p>
+    <div class="header-stats">
+      <div class="header-stat">
+        <div class="stat-num">40</div>
+        <div class="stat-label">事前回答数（回収率91%）</div>
+      </div>
+      <div class="header-stat">
+        <div class="stat-num">20</div>
+        <div class="stat-label">セミナー後回答数（北エリア）</div>
+      </div>
+      <div class="header-stat">
+        <div class="stat-num">3/22</div>
+        <div class="stat-label">北エリアセミナー実施日</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diagram-body">
+
+    <!-- ===== Section 1: Pre-survey ===== -->
+    <div class="section-title">
+      <div class="sec-icon" style="background:#eff6ff;">
+        <svg viewBox="0 0 24 24" fill="#2563eb"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      事前アンケート結果
+    </div>
+    <div class="section-sub">セミナー実施前 / 44名中40名回答（回収率91%）</div>
+
+    <div class="survey-grid">
+      <!-- Card 1: Self-evaluation -->
+      <div class="survey-card">
+        <div class="survey-card-title">お客様のお名前を呼べていますか？（自己評価）</div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">ほぼ全員呼べている</span>
+            <span class="bar-label-value">68%（27名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-navy" style="width:68%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">常連のお客様は呼べている</span>
+            <span class="bar-label-value">28%（11名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-blue" style="width:28%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">あまりできていない</span>
+            <span class="bar-label-value">5%（2名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-slate" style="width:5%"></div></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Staff evaluation -->
+      <div class="survey-card">
+        <div class="survey-card-title">店舗のスタッフは呼べていますか？</div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">ほぼ全員できている</span>
+            <span class="bar-label-value">40%（16名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-navy" style="width:40%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">一部のスタッフはできている</span>
+            <span class="bar-label-value">50%（20名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-blue" style="width:50%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">あまりできていない</span>
+            <span class="bar-label-value">10%（4名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-slate" style="width:10%"></div></div>
+        </div>
+      </div>
+
+      <!-- Card 3: Reasons -->
+      <div class="survey-card">
+        <div class="survey-card-title">呼べていない理由（複数選択）</div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">忙しくて余裕がない</span>
+            <span class="bar-label-value">48%（19名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-amber" style="width:48%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">覚えられない / 思い出せない</span>
+            <span class="bar-label-value">40%（16名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-amber" style="width:40%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">照れくさい・気恥ずかしい</span>
+            <span class="bar-label-value">25%（10名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-amber" style="width:25%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">間違えるのが怖い</span>
+            <span class="bar-label-value">12%（5名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-amber" style="width:12%"></div></div>
+        </div>
+      </div>
+
+      <!-- Card 4: Challenges & Action -->
+      <div class="survey-card">
+        <div class="survey-card-title">新しい取り組みで一番難しいこと / スタッフの行動状況</div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">継続させること</span>
+            <span class="bar-label-value">68%（27名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-rose" style="width:68%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">やる意味を納得してもらう</span>
+            <span class="bar-label-value">25%（10名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-rose" style="width:25%"></div></div>
+        </div>
+        <div style="height:10px;"></div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">最初はやるが徐々にやらなくなる</span>
+            <span class="bar-label-value">50%（20名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-slate" style="width:50%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span class="bar-label-text">しっかり行動に移してくれている</span>
+            <span class="bar-label-value">38%（15名）</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-teal" style="width:38%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ===== Section 2: Post-seminar ===== -->
+    <div class="section-title">
+      <div class="sec-icon" style="background:#f0fdf4;">
+        <svg viewBox="0 0 24 24" fill="#059669"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      セミナー後アンケート結果
+    </div>
+    <div class="section-sub">北エリア参加者20名（3月22日実施分）</div>
+
+    <div class="seminar-highlights">
+      <div class="s-card">
+        <div class="s-card-title">今日のセミナーで一番印象に残ったこと</div>
+        <div class="s-list-item">
+          <span class="s-rank rank-1">1</span>
+          サンドイッチ方式（母性→父性→母性）
+          <span class="s-count">8名</span>
+        </div>
+        <div class="s-list-item">
+          <span class="s-rank rank-1">1</span>
+          母性と父性のバランス
+          <span class="s-count">8名</span>
+        </div>
+        <div class="s-list-item">
+          <span class="s-rank rank-3">3</span>
+          褒め方・褒めることの難しさ
+          <span class="s-count">3名</span>
+        </div>
+        <div class="s-list-item">
+          <span class="s-rank rank-4">4</span>
+          スタッフへの伝え方
+          <span class="s-count">2名</span>
+        </div>
+      </div>
+
+      <div class="s-card">
+        <div class="s-card-title">明日から最初にやってみること</div>
+        <div class="s-list-item">
+          <span class="s-rank rank-1">1</span>
+          お客様の名前を呼ぶ（3回呼ぶ等）
+          <span class="s-count">7名</span>
+        </div>
+        <div class="s-list-item">
+          <span class="s-rank rank-1">1</span>
+          スタッフを褒める・いいところを探す
+          <span class="s-count">7名</span>
+        </div>
+        <div class="s-list-item">
+          <span class="s-rank rank-3">3</span>
+          サンドイッチ方式で伝える
+          <span class="s-count">5名</span>
+        </div>
+        <div class="s-list-item">
+          <span class="s-rank rank-4">4</span>
+          朝礼で今日の内容を共有する
+          <span class="s-count">1名</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ===== Section 3: Before/After highlight ===== -->
+    <div class="highlight-section">
+      <div class="highlight-deco"></div>
+      <div class="highlight-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        事前 → セミナー後の意識変化
+      </div>
+      <div class="change-grid">
+        <div class="change-box before-box">
+          <div class="change-label">BEFORE（事前）</div>
+          <div class="change-big">82%</div>
+          <div class="change-desc">「積極的にやりたい」<br>不安あり 18%</div>
+        </div>
+        <div class="arrow-col">
+          <div class="arrow-badge">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </div>
+        </div>
+        <div class="change-box after-box">
+          <div class="change-label">AFTER（セミナー後）</div>
+          <div class="change-big">95%</div>
+          <div class="change-desc">「すぐやってみる」<br>不安わずか 5%、迷い 0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Section 4: Key insights ===== -->
+    <div class="section-title" style="margin-bottom:16px;">
+      <div class="sec-icon" style="background:#faf5ff;">
+        <svg viewBox="0 0 24 24" fill="#7c3aed"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      </div>
+      セミナーによる3つの変化
+    </div>
+
+    <div class="insight-row">
+      <div class="insight-card insight-blue">
+        <div class="insight-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <h4>意欲の向上</h4>
+        <p>「やりたい」82% →「すぐやる」95%へ。不安を感じる方が18%から5%に大幅減少</p>
+      </div>
+      <div class="insight-card insight-green">
+        <div class="insight-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h4>課題の具体化</h4>
+        <p>「継続が難しい」という漠然とした不安から「褒める言葉を出すのが難しい」という具体的課題へ変化</p>
+      </div>
+      <div class="insight-card insight-purple">
+        <div class="insight-icon">
+          <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </div>
+        <h4>行動の宣言化</h4>
+        <p>「覚えられない」「忙しい」から「名前を3回呼ぶ」「サンドイッチ方式で伝える」等、自分の言葉で行動を宣言</p>
+      </div>
+    </div>
+
+    <!-- ===== CTA ===== -->
+    <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
+      <div class="cta-text">Name Calling Project - 1年間の伴走プロジェクト</div>
+      <div class="cta-headline">セミナーを通じて「やりたい気持ち」が「具体的な行動」に変わりました。<br>この意欲を「継続する仕組み」へつなげていきます。</div>
+      <div class="cta-note">※ 南エリア（3月29日実施分）の結果は、実施後に追加報告いたします。</div>
+    </div>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>NCP Survey Report / 2025.03</small>
+    <div class="dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+async function captureCard() {
+  const el = document.getElementById('capture');
+  return await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+  });
+}
+async function downloadPNG() {
+  setLoading('btn-png', true);
+  try {
+    const canvas = await captureCard();
+    const link = document.createElement('a');
+    link.download = 'ncp-survey-report.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('PNGをダウンロードしました');
+  } catch(e) { console.error(e); showToast('エラーが発生しました'); }
+  setLoading('btn-png', false);
+}
+async function downloadPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const canvas = await captureCard();
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdfW = 210;
+    const pdfH = (canvas.height / canvas.width) * pdfW;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+    pdf.save('ncp-survey-report.pdf');
+    showToast('PDFをダウンロードしました');
+  } catch(e) { console.error(e); showToast('エラーが発生しました'); }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>
