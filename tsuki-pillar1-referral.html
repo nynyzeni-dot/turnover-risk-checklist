@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月美容室 柱1：紹介の仕組み化</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1410;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 40px; gap: 24px;
+  }
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px; border-radius: 16px;
+  }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); }
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border: none; border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-download .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #3d2a1e; color: #fff; padding: 12px 28px;
+    border-radius: 12px; font-size: 13px; font-weight: 700;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #d4a574; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .diagram-card { width: 900px; background: #ffffff; border-radius: 24px; overflow: hidden; }
+
+  .diagram-header {
+    background: linear-gradient(135deg, #3d2a1e 0%, #5c3d2e 50%, #7a5540 100%);
+    color: #fff; padding: 44px 48px 36px; position: relative; overflow: hidden;
+  }
+  .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
+  .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(212,165,116,0.15); }
+  .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(212,165,116,0.1); }
+  .header-tag {
+    display: inline-block; background: rgba(212,165,116,0.3);
+    padding: 6px 18px; border-radius: 20px; font-size: 11px;
+    font-weight: 600; letter-spacing: 2px; margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+  .diagram-header h1 {
+    font-size: 28px; font-weight: 900; letter-spacing: 1px;
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .diagram-header .subtitle {
+    font-size: 14px; color: rgba(255,255,255,0.7);
+    position: relative; z-index: 1;
+  }
+
+  .diagram-body { padding: 36px 44px 40px; }
+  .section-label {
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 3px; color: #5c3d2e; margin-bottom: 16px;
+  }
+
+  /* 3ステップフロー */
+  .flow {
+    display: flex; gap: 0; margin-bottom: 32px; position: relative;
+  }
+  .flow-step {
+    flex: 1; border-radius: 16px; padding: 22px 18px;
+    position: relative; z-index: 1;
+  }
+  .flow-step:not(:last-child) { margin-right: 12px; }
+  .flow-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 2; display: flex; align-items: center; justify-content: center;
+  }
+  .flow-arrow-1 { left: calc(33.33% - 6px); }
+  .flow-arrow-2 { left: calc(66.66% - 6px); }
+  .flow-arrow-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #5c3d2e; display: flex; align-items: center; justify-content: center;
+  }
+  .flow-arrow-circle svg {
+    width: 14px; height: 14px; fill: none; stroke: #fff;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .flow-red { background: #fef2f2; border: 2px solid #fecaca; }
+  .flow-yellow { background: #fffbeb; border: 2px solid #fde68a; }
+  .flow-green { background: #ecfdf5; border: 2px solid #a7f3d0; }
+  .flow-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 8px;
+    font-size: 9px; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .flow-red .flow-badge { background: #ef4444; color: #fff; }
+  .flow-yellow .flow-badge { background: #f59e0b; color: #fff; }
+  .flow-green .flow-badge { background: #059669; color: #fff; }
+  .flow-title {
+    font-size: 13px; font-weight: 900; margin-bottom: 10px;
+  }
+  .flow-red .flow-title { color: #991b1b; }
+  .flow-yellow .flow-title { color: #92400e; }
+  .flow-green .flow-title { color: #065f46; }
+  .flow-list {
+    list-style: none; font-size: 11.5px; line-height: 1.8;
+  }
+  .flow-red .flow-list { color: #991b1b; }
+  .flow-yellow .flow-list { color: #92400e; }
+  .flow-green .flow-list { color: #065f46; }
+  .flow-list li { padding: 1px 0; }
+  .flow-list li::before { content: "・"; font-weight: 900; }
+
+  /* 接続メッセージ */
+  .connector-msg {
+    text-align: center; margin-bottom: 32px; padding: 18px;
+    background: linear-gradient(135deg, #f5efe6, #faf7f2);
+    border: 2px solid #d4a574; border-radius: 14px;
+  }
+  .connector-msg p {
+    font-size: 16px; font-weight: 900; color: #5c3d2e;
+    letter-spacing: 1px;
+  }
+
+  /* 具体アクションカード */
+  .detail-section { margin-bottom: 32px; }
+  .detail-title {
+    font-size: 14px; font-weight: 900; color: #3d2a1e;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .detail-title svg { width: 22px; height: 22px; fill: #5c3d2e; }
+  .detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .detail-card {
+    background: #f5efe6; border: 1px solid #e8ddd0;
+    border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
+  }
+  .detail-card-deco {
+    position: absolute; top: -15px; right: -15px;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: rgba(92,61,46,0.06); pointer-events: none;
+  }
+  .detail-card-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #5c3d2e; color: #fff; font-size: 12px; font-weight: 900;
+    margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .detail-card h4 {
+    font-size: 13px; font-weight: 900; color: #3d2a1e;
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .detail-card p {
+    font-size: 11.5px; color: #6b5b4e; line-height: 1.8;
+    position: relative; z-index: 1;
+  }
+
+  /* Before vs After 比較 */
+  .comparison {
+    display: flex; gap: 16px; margin-bottom: 32px;
+  }
+  .compare-box {
+    flex: 1; border-radius: 16px; padding: 24px; position: relative; overflow: hidden;
+  }
+  .compare-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 70px; height: 70px; border-radius: 50%; pointer-events: none;
+  }
+  .compare-before { background: #fef2f2; border: 2px solid #fecaca; }
+  .compare-before .compare-deco { background: rgba(239,68,68,0.08); }
+  .compare-after { background: #ecfdf5; border: 2px solid #a7f3d0; }
+  .compare-after .compare-deco { background: rgba(16,185,129,0.08); }
+  .compare-label {
+    font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px;
+    position: relative; z-index: 1;
+  }
+  .compare-before .compare-label { color: #ef4444; }
+  .compare-after .compare-label { color: #059669; }
+  .compare-number {
+    font-size: 28px; font-weight: 900; margin-bottom: 6px;
+    position: relative; z-index: 1;
+  }
+  .compare-before .compare-number { color: #dc2626; }
+  .compare-after .compare-number { color: #059669; }
+  .compare-sub {
+    font-size: 11px; font-weight: 700; margin-bottom: 12px;
+    position: relative; z-index: 1;
+  }
+  .compare-before .compare-sub { color: #dc2626; }
+  .compare-after .compare-sub { color: #059669; }
+  .compare-list {
+    list-style: none; font-size: 11.5px; line-height: 1.8;
+    position: relative; z-index: 1;
+  }
+  .compare-before .compare-list { color: #991b1b; }
+  .compare-after .compare-list { color: #065f46; }
+  .compare-list li { padding: 1px 0; display: flex; align-items: center; gap: 6px; }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    font-size: 9px; font-weight: 800;
+  }
+  .pill-red { background: #fee2e2; color: #dc2626; }
+  .pill-green { background: #d1fae5; color: #059669; }
+  .compare-arrow-col {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .compare-arrow-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #5c3d2e, #7a5540);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .compare-arrow-circle svg {
+    width: 20px; height: 20px; fill: none; stroke: #fff;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .speed-badge {
+    text-align: center; margin-top: -20px; margin-bottom: 32px;
+  }
+  .speed-badge span {
+    display: inline-block; padding: 6px 20px; border-radius: 20px;
+    background: linear-gradient(135deg, #5c3d2e, #7a5540);
+    color: #fff; font-size: 13px; font-weight: 900; letter-spacing: 1px;
+  }
+
+  /* シミュレーション */
+  .sim-box {
+    background: #f5efe6; border: 2px solid #d4a574;
+    border-radius: 16px; padding: 24px; margin-bottom: 32px;
+  }
+  .sim-title {
+    font-size: 14px; font-weight: 900; color: #3d2a1e; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sim-title svg { width: 22px; height: 22px; fill: #5c3d2e; }
+  .sim-grid {
+    display: flex; gap: 12px;
+  }
+  .sim-item {
+    flex: 1; text-align: center; padding: 16px;
+    background: #fff; border-radius: 12px; border: 1px solid #e8ddd0;
+  }
+  .sim-item-label {
+    font-size: 10px; font-weight: 700; color: #8b7562;
+    letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .sim-item-value {
+    font-size: 22px; font-weight: 900; color: #5c3d2e; margin-bottom: 4px;
+  }
+  .sim-item-desc {
+    font-size: 10px; color: #8b7562; line-height: 1.5;
+  }
+  .sim-result {
+    margin-top: 14px; padding: 14px; background: #fff;
+    border-radius: 12px; border: 2px solid #d4a574; text-align: center;
+  }
+  .sim-result-label {
+    font-size: 10px; font-weight: 800; color: #5c3d2e;
+    letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .sim-result-value {
+    font-size: 28px; font-weight: 900; color: #5c3d2e;
+  }
+  .sim-result-calc {
+    font-size: 11px; color: #8b7562; margin-top: 4px;
+  }
+
+  /* ボトムCTA */
+  .bottom-cta {
+    text-align: center; padding: 28px; background: #3d2a1e;
+    border-radius: 20px; position: relative; overflow: hidden;
+  }
+  .cta-deco-1 {
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(212,165,116,0.12); pointer-events: none;
+  }
+  .cta-deco-2 {
+    position: absolute; bottom: -40px; left: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(212,165,116,0.08); pointer-events: none;
+  }
+  .cta-text {
+    font-size: 13px; color: rgba(255,255,255,0.6);
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .cta-headline {
+    font-size: 20px; font-weight: 900; color: #d4a574;
+    line-height: 1.6; position: relative; z-index: 1;
+  }
+
+  .diagram-footer {
+    padding: 16px 44px; border-top: 1px solid #f3f4f6;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .diagram-footer small { font-size: 10px; color: #d1d5db; }
+  .diagram-footer .dots { display: flex; gap: 4px; }
+  .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
+  .diagram-footer .dots span:first-child { background: #d4a574; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">ダウンロード:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+
+<div class="diagram-card" id="capture">
+
+  <!-- ヘッダー -->
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="header-tag">PILLAR 1 / 3</div>
+    <h1>1つ目の柱 - 紹介の仕組み化</h1>
+    <p class="subtitle">今いるファン30〜40名を最大の集客エンジンに変える</p>
+  </div>
+
+  <div class="diagram-body">
+
+    <!-- 3ステップフロー -->
+    <div class="section-label">3-Step Flow</div>
+    <div class="flow">
+      <div class="flow-step flow-red">
+        <div class="flow-badge">STEP 1</div>
+        <div class="flow-title">現状の課題</div>
+        <ul class="flow-list">
+          <li>リピーター30〜40名のファンがいる</li>
+          <li>でも紹介を「最近やっと頼み始めた」状態</li>
+          <li>ファンの力を全く活かせていない</li>
+        </ul>
+      </div>
+      <div class="flow-arrow flow-arrow-1">
+        <div class="flow-arrow-circle">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+      <div class="flow-step flow-yellow">
+        <div class="flow-badge">STEP 2</div>
+        <div class="flow-title">なぜ紹介が最強か</div>
+        <ul class="flow-list">
+          <li>コストゼロで新規が来る</li>
+          <li>紹介客はリピート率が高い</li>
+          <li>口コミは広告より信頼される</li>
+        </ul>
+      </div>
+      <div class="flow-arrow flow-arrow-2">
+        <div class="flow-arrow-circle">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+      <div class="flow-step flow-green">
+        <div class="flow-badge">STEP 3</div>
+        <div class="flow-title">仕組み化する</div>
+        <ul class="flow-list">
+          <li>紹介カードを作る（紹介者にも特典）</li>
+          <li>施術中の会話で自然にお願いする</li>
+          <li>月1〜2名の紹介を安定的に獲得</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 接続メッセージ -->
+    <div class="connector-msg">
+      <p>「頼めば出る。仕組みにすれば安定する」</p>
+    </div>
+
+    <!-- 具体アクション -->
+    <div class="detail-section">
+      <div class="detail-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        具体的にやること
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <div class="detail-card-deco"></div>
+          <div class="detail-card-num">1</div>
+          <h4>紹介カード作成</h4>
+          <p>「紹介してくれた方に次回500円OFF」など<br>お客様の財布に入るサイズ</p>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card-deco"></div>
+          <div class="detail-card-num">2</div>
+          <h4>トークスクリプト</h4>
+          <p>「同じような悩みのお友達いたら紹介してね」<br>施術中の自然な流れで</p>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card-deco"></div>
+          <div class="detail-card-num">3</div>
+          <h4>紹介時の特典設計</h4>
+          <p>紹介された方：初回カウンセリング無料<br>紹介した方：次回施術割引</p>
+        </div>
+        <div class="detail-card">
+          <div class="detail-card-deco"></div>
+          <div class="detail-card-num">4</div>
+          <h4>効果測定</h4>
+          <p>月何名紹介で来たかを記録<br>どのお客様からの紹介が多いか把握</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Before vs After 比較 -->
+    <div class="section-label">Before vs After</div>
+    <div class="comparison">
+      <div class="compare-box compare-before">
+        <div class="compare-deco"></div>
+        <div class="compare-label">BEFORE</div>
+        <div class="compare-number">月0〜1名</div>
+        <div class="compare-sub">紹介なし</div>
+        <ul class="compare-list">
+          <li>新規はチラシとInstagramのみ</li>
+          <li>ファンの力が眠っている</li>
+          <li><span class="pill pill-red">頼んでいない</span> <span class="pill pill-red">コストかかる</span> <span class="pill pill-red">不安定</span></li>
+        </ul>
+      </div>
+      <div class="compare-arrow-col">
+        <div class="compare-arrow-circle">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+      <div class="compare-box compare-after">
+        <div class="compare-deco"></div>
+        <div class="compare-label">AFTER</div>
+        <div class="compare-number">月2〜3名</div>
+        <div class="compare-sub">紹介あり</div>
+        <ul class="compare-list">
+          <li>コストゼロで理想のお客様が来る</li>
+          <li>リピート率も高い</li>
+          <li><span class="pill pill-green">コストゼロ</span> <span class="pill pill-green">理想客</span> <span class="pill pill-green">安定</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="speed-badge">
+      <span>+2〜3名/月</span>
+    </div>
+
+    <!-- シミュレーション -->
+    <div class="section-label">Simulation</div>
+    <div class="sim-box">
+      <div class="sim-title">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        紹介による成長シミュレーション
+      </div>
+      <div class="sim-grid">
+        <div class="sim-item">
+          <div class="sim-item-label">紹介獲得</div>
+          <div class="sim-item-value">月2名</div>
+          <div class="sim-item-desc">紹介カード＋声がけ</div>
+        </div>
+        <div class="sim-item">
+          <div class="sim-item-label">リピート率</div>
+          <div class="sim-item-value">70%</div>
+          <div class="sim-item-desc">紹介客は定着しやすい</div>
+        </div>
+        <div class="sim-item">
+          <div class="sim-item-label">半年後 累計定着</div>
+          <div class="sim-item-value">+8名</div>
+          <div class="sim-item-desc">6ヶ月 × 2名 × 70%</div>
+        </div>
+      </div>
+      <div class="sim-result">
+        <div class="sim-result-label">売上増加</div>
+        <div class="sim-result-value">+120,000円/月</div>
+        <div class="sim-result-calc">+8名 &times; 15,000円 = +120,000円/月</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
+      <div class="cta-text">今いる30〜40名のファンが最強の営業マン</div>
+      <div class="cta-headline">「紹介してね」の一言から始めよう</div>
+    </div>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>月美容室 Growth Strategy - Pillar 1</small>
+    <div class="dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+async function captureCard() {
+  return await html2canvas(document.getElementById('capture'), {
+    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+  });
+}
+async function downloadPNG() {
+  setLoading('btn-png', true);
+  try {
+    const c = await captureCard();
+    const a = document.createElement('a');
+    a.download = 'tsuki-pillar1-referral.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+    showToast('PNGをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-png', false);
+}
+async function downloadPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const c = await captureCard();
+    const { jsPDF } = window.jspdf;
+    const w = 210, h = (c.height/c.width)*w;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[w,h] });
+    pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save('tsuki-pillar1-referral.pdf');
+    showToast('PDFをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>

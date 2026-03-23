@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月美容室 柱3：予防美容ポジショニング</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f1a12;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 40px; gap: 24px;
+  }
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px; border-radius: 16px;
+  }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); }
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border: none; border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-download .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1a3a24; color: #fff; padding: 12px 28px;
+    border-radius: 12px; font-size: 13px; font-weight: 700;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #6b9f78; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .diagram-card { width: 900px; background: #ffffff; border-radius: 24px; overflow: hidden; }
+
+  .diagram-header {
+    background: linear-gradient(135deg, #1a3a24 0%, #2d5a3d 50%, #3d7a52 100%);
+    color: #fff; padding: 44px 48px 36px; position: relative; overflow: hidden;
+  }
+  .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
+  .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(107,159,120,0.15); }
+  .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(107,159,120,0.1); }
+  .header-tag {
+    display: inline-block; background: rgba(107,159,120,0.35);
+    padding: 6px 18px; border-radius: 20px; font-size: 11px;
+    font-weight: 600; letter-spacing: 2px; margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+  .diagram-header h1 {
+    font-size: 28px; font-weight: 900; letter-spacing: 1px;
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .diagram-header .subtitle {
+    font-size: 14px; color: rgba(255,255,255,0.7);
+    position: relative; z-index: 1;
+  }
+
+  .diagram-body { padding: 36px 44px 40px; }
+  .section-label {
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 3px; color: #2d5a3d; margin-bottom: 16px;
+  }
+
+  /* 3ステップフロー */
+  .step-flow {
+    display: flex; gap: 0; margin-bottom: 32px; position: relative;
+  }
+  .step-flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; width: 32px;
+  }
+  .step-flow-arrow svg {
+    width: 20px; height: 20px; fill: none; stroke: #94a3b8;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .step-card {
+    flex: 1; border-radius: 16px; padding: 22px 18px;
+    position: relative; overflow: hidden;
+  }
+  .step-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 70px; height: 70px; border-radius: 50%; pointer-events: none;
+  }
+  .step-badge {
+    display: inline-block; padding: 4px 12px; border-radius: 8px;
+    font-size: 9px; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .step-card h3 {
+    font-size: 13px; font-weight: 900; color: #1e1b4b;
+    margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .step-list {
+    list-style: none; position: relative; z-index: 1;
+  }
+  .step-list li {
+    font-size: 11px; color: #4b5563; line-height: 1.7;
+    padding: 3px 0; padding-left: 14px; position: relative;
+  }
+  .step-list li::before {
+    content: ''; position: absolute; left: 0; top: 10px;
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+
+  /* Step 1 - Red */
+  .step-problem { background: #fef2f2; border: 2px solid #fecaca; }
+  .step-problem .step-deco { background: rgba(239,68,68,0.08); }
+  .step-problem .step-badge { background: #ef4444; color: #fff; }
+  .step-problem h3 { color: #991b1b; }
+  .step-problem .step-list li::before { background: #ef4444; }
+
+  /* Step 2 - Yellow */
+  .step-pivot { background: #fffbeb; border: 2px solid #fde68a; }
+  .step-pivot .step-deco { background: rgba(217,119,6,0.08); }
+  .step-pivot .step-badge { background: #d97706; color: #fff; }
+  .step-pivot h3 { color: #92400e; }
+  .step-pivot .step-list li::before { background: #d97706; }
+
+  /* Step 3 - Green */
+  .step-position { background: linear-gradient(180deg, #d1fae5, #f0f7f2); border: 2px solid #a7f3d0; }
+  .step-position .step-deco { background: rgba(45,90,61,0.08); }
+  .step-position .step-badge { background: #2d5a3d; color: #fff; }
+  .step-position h3 { color: #1a3a24; }
+  .step-position .step-list li::before { background: #2d5a3d; }
+
+  /* 接続メッセージ */
+  .connector-msg {
+    text-align: center; margin-bottom: 32px;
+    padding: 18px; background: linear-gradient(135deg, #f0f7f2, #e8f5ec);
+    border-radius: 14px; border: 2px solid #c6e7ce;
+  }
+  .connector-msg p {
+    font-size: 16px; font-weight: 900; color: #2d5a3d;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .connector-msg svg {
+    width: 22px; height: 22px; fill: none; stroke: #2d5a3d;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* detail-section */
+  .detail-section {
+    margin-bottom: 32px;
+  }
+  .detail-title {
+    font-size: 15px; font-weight: 900; color: #1a3a24;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .detail-title svg { width: 22px; height: 22px; fill: #2d5a3d; }
+
+  /* 言い換え比較カード */
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .compare-card {
+    border-radius: 14px; padding: 18px; position: relative; overflow: hidden;
+  }
+  .compare-card-deco {
+    position: absolute; top: -16px; right: -16px;
+    width: 50px; height: 50px; border-radius: 50%; pointer-events: none;
+  }
+  .compare-ng { background: #fef2f2; border: 2px solid #fecaca; }
+  .compare-ng .compare-card-deco { background: rgba(239,68,68,0.08); }
+  .compare-ok { background: #f0f7f2; border: 2px solid #c6e7ce; }
+  .compare-ok .compare-card-deco { background: rgba(45,90,61,0.08); }
+  .compare-label {
+    font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .compare-ng .compare-label { color: #ef4444; }
+  .compare-ok .compare-label { color: #2d5a3d; }
+  .compare-value {
+    font-size: 14px; font-weight: 900; margin-bottom: 6px;
+    position: relative; z-index: 1; line-height: 1.5;
+  }
+  .compare-ng .compare-value { color: #991b1b; }
+  .compare-ok .compare-value { color: #1a3a24; }
+  .compare-note {
+    font-size: 11px; position: relative; z-index: 1;
+  }
+  .compare-ng .compare-note { color: #dc2626; }
+  .compare-ok .compare-note { color: #2d5a3d; }
+
+  /* merit-list */
+  .merit-list { list-style: none; }
+  .merit-list li {
+    font-size: 13px; color: #374151; line-height: 1.8;
+    padding: 8px 0; display: flex; align-items: flex-start; gap: 10px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .merit-list li:last-child { border-bottom: none; }
+  .merit-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #2d5a3d; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; margin-top: 2px;
+  }
+  .merit-check svg {
+    width: 12px; height: 12px; fill: none; stroke: #fff;
+    stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .merit-list strong { font-weight: 800; color: #2d5a3d; }
+
+  /* 実績カード */
+  .result-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin-bottom: 12px;
+  }
+  .result-card {
+    background: linear-gradient(180deg, #f0f7f2, #fff);
+    border: 2px solid #c6e7ce; border-radius: 14px;
+    padding: 18px 14px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .result-card-deco {
+    position: absolute; top: -14px; right: -14px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(45,90,61,0.06); pointer-events: none;
+  }
+  .result-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(45,90,61,0.1); display: flex;
+    align-items: center; justify-content: center;
+    margin: 0 auto 8px; position: relative; z-index: 1;
+  }
+  .result-icon svg { width: 18px; height: 18px; fill: #2d5a3d; }
+  .result-text {
+    font-size: 13px; font-weight: 800; color: #1a3a24;
+    position: relative; z-index: 1;
+  }
+  .result-note {
+    text-align: center; font-size: 12px; font-weight: 700;
+    color: #6b9f78; margin-bottom: 0; padding: 10px;
+    background: #f0f7f2; border-radius: 10px;
+  }
+
+  /* Before vs After */
+  .ba-grid {
+    display: flex; gap: 16px; margin-bottom: 32px;
+  }
+  .ba-card {
+    flex: 1; border-radius: 18px; padding: 24px 20px;
+    position: relative; overflow: hidden;
+  }
+  .ba-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 80px; height: 80px; border-radius: 50%; pointer-events: none;
+  }
+  .ba-before { background: #fef2f2; border: 2px solid #fecaca; }
+  .ba-before .ba-deco { background: rgba(239,68,68,0.08); }
+  .ba-after { background: linear-gradient(180deg, #d1fae5, #f0f7f2); border: 2px solid #a7f3d0; }
+  .ba-after .ba-deco { background: rgba(45,90,61,0.08); }
+  .ba-badge {
+    display: inline-block; padding: 4px 14px; border-radius: 10px;
+    font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 14px; position: relative; z-index: 1;
+  }
+  .ba-before .ba-badge { background: #ef4444; color: #fff; }
+  .ba-after .ba-badge { background: #2d5a3d; color: #fff; }
+  .ba-card h3 {
+    font-size: 16px; font-weight: 900; color: #1e1b4b;
+    margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .ba-detail {
+    font-size: 12px; color: #4b5563; line-height: 1.8;
+    margin-bottom: 14px; position: relative; z-index: 1;
+  }
+  .ba-before .ba-detail strong { font-weight: 800; color: #dc2626; }
+  .ba-after .ba-detail strong { font-weight: 800; color: #2d5a3d; }
+  .ba-pills {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .ba-pill {
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 11px; font-weight: 800;
+  }
+  .ba-before .ba-pill { background: rgba(239,68,68,0.12); color: #dc2626; }
+  .ba-after .ba-pill { background: rgba(45,90,61,0.12); color: #2d5a3d; }
+  .ba-arrow-col {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .ba-arrow-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #2d5a3d, #1a3a24);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ba-arrow-circle svg {
+    width: 20px; height: 20px; fill: none; stroke: #fff;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* speed badge */
+  .speed-badge-row {
+    text-align: center; margin-top: -16px; margin-bottom: 32px;
+    position: relative; z-index: 2;
+  }
+  .speed-badge {
+    display: inline-block; padding: 8px 28px; border-radius: 24px;
+    background: linear-gradient(135deg, #2d5a3d, #1a3a24);
+    color: #a7f3d0; font-size: 14px; font-weight: 900;
+    letter-spacing: 2px; box-shadow: 0 4px 16px rgba(45,90,61,0.3);
+  }
+
+  /* CTA */
+  .bottom-cta {
+    text-align: center; padding: 28px; background: #1a3a24;
+    border-radius: 20px; position: relative; overflow: hidden;
+  }
+  .cta-deco-1 {
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(107,159,120,0.12); pointer-events: none;
+  }
+  .cta-deco-2 {
+    position: absolute; bottom: -40px; left: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(107,159,120,0.08); pointer-events: none;
+  }
+  .cta-text {
+    font-size: 13px; color: rgba(255,255,255,0.6);
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .cta-headline {
+    font-size: 20px; font-weight: 900; color: #a7f3d0;
+    line-height: 1.6; position: relative; z-index: 1;
+  }
+
+  .diagram-footer {
+    padding: 16px 44px; border-top: 1px solid #f3f4f6;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .diagram-footer small { font-size: 10px; color: #d1d5db; }
+  .diagram-footer .dots { display: flex; gap: 4px; }
+  .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
+  .diagram-footer .dots span:nth-child(3) { background: #2d5a3d; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">ダウンロード:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+
+<div class="diagram-card" id="capture">
+
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="header-tag">PILLAR 3 / 3</div>
+    <h1>3つ目の柱 - 予防美容というポジショニング</h1>
+    <p class="subtitle">「中も外もまるごとケア」で宮崎唯一のサロンになる</p>
+  </div>
+
+  <div class="diagram-body">
+
+    <!-- 3ステップフロー -->
+    <div class="section-label">Positioning Strategy - 3 Steps</div>
+    <div class="step-flow">
+      <div class="step-card step-problem">
+        <div class="step-deco"></div>
+        <div class="step-badge">STEP 1</div>
+        <h3>これまでの課題</h3>
+        <ul class="step-list">
+          <li>漢方を前面に出すと「胡散臭い」と見られた</li>
+          <li>美容と漢方が別々に見えていた</li>
+          <li>せっかくの差別化要素が活かせていない</li>
+        </ul>
+      </div>
+      <div class="step-flow-arrow">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+      <div class="step-card step-pivot">
+        <div class="step-deco"></div>
+        <div class="step-badge">STEP 2</div>
+        <h3>転換のポイント</h3>
+        <ul class="step-list">
+          <li>「漢方」→「予防美容」に言い換える</li>
+          <li>入口は「美容」。来てみたら体のケアもできると気づく</li>
+          <li>胡散臭さゼロで同じことができる</li>
+        </ul>
+      </div>
+      <div class="step-flow-arrow">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+      <div class="step-card step-position">
+        <div class="step-deco"></div>
+        <div class="step-badge">STEP 3</div>
+        <h3>ポジション確立</h3>
+        <ul class="step-list">
+          <li>「髪を整えるついでに、体の中からもキレイになれる美容室」</li>
+          <li>チラシ・Instagram・紹介トーク全てをこのコンセプトに統一</li>
+          <li>宮崎でこのポジションを取れるのは月美容室だけ</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 接続メッセージ -->
+    <div class="connector-msg">
+      <p>
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg>
+        言い方を変えるだけで、最大の武器になる
+      </p>
+    </div>
+
+    <!-- 言い換え比較テーブル -->
+    <div class="detail-section">
+      <div class="detail-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+        「漢方」を「予防美容」に言い換えるだけ
+      </div>
+      <div class="compare-grid">
+        <div class="compare-card compare-ng">
+          <div class="compare-card-deco"></div>
+          <div class="compare-label">NG な言い方</div>
+          <div class="compare-value">「漢方で体質改善します」</div>
+          <div class="compare-note">→ 薬っぽい・怪しい</div>
+        </div>
+        <div class="compare-card compare-ok">
+          <div class="compare-card-deco"></div>
+          <div class="compare-label">OK な言い方</div>
+          <div class="compare-value">「内側からもキレイを作ります」</div>
+          <div class="compare-note">→ 美容の延長線上・自然</div>
+        </div>
+        <div class="compare-card compare-ng">
+          <div class="compare-card-deco"></div>
+          <div class="compare-label">NG な打ち出し</div>
+          <div class="compare-value">「漢方薬店併設サロン」</div>
+          <div class="compare-note">→ 来る人を選ぶ</div>
+        </div>
+        <div class="compare-card compare-ok">
+          <div class="compare-card-deco"></div>
+          <div class="compare-label">OK な打ち出し</div>
+          <div class="compare-value">「予防美容サロン」</div>
+          <div class="compare-note">→ 美容室に来る全員が対象</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 具体的な展開 -->
+    <div class="detail-section">
+      <div class="section-label">Unified Communication</div>
+      <div class="detail-title">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        すべての発信をこのコンセプトに統一する
+      </div>
+      <ul class="merit-list">
+        <li>
+          <div class="merit-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span><strong>チラシ：</strong>「中も外もまるごとケアできる美容室」に刷新</span>
+        </li>
+        <li>
+          <div class="merit-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span><strong>Instagram：</strong>予防美容の実績（肌ツヤ・睡眠改善等）を発信</span>
+        </li>
+        <li>
+          <div class="merit-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span><strong>紹介トーク：</strong>「髪だけじゃなくて体の不調も相談できるよ」</span>
+        </li>
+        <li>
+          <div class="merit-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span><strong>メニュー表：</strong>漢方カウンセリングを「予防美容カウンセリング」に名称変更</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 本人が持っている実績 -->
+    <div class="detail-section">
+      <div class="section-label">Proven Results</div>
+      <div class="detail-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        すでにある「予防美容」の実績
+      </div>
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="result-card-deco"></div>
+          <div class="result-icon">
+            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          </div>
+          <div class="result-text">肌のツヤ・乾燥改善</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-deco"></div>
+          <div class="result-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 11.75c-.69 0-1.25.56-1.25 1.25s.56 1.25 1.25 1.25 1.25-.56 1.25-1.25-.56-1.25-1.25-1.25zm6 0c-.69 0-1.25.56-1.25 1.25s.56 1.25 1.25 1.25 1.25-.56 1.25-1.25-.56-1.25-1.25-1.25zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-.29.02-.58.05-.86 2.36-1.05 4.23-2.98 5.21-5.37C11.07 8.33 14.05 10 17.42 10c.78 0 1.53-.09 2.25-.26.21.71.33 1.47.33 2.26 0 4.41-3.59 8-8 8z"/></svg>
+          </div>
+          <div class="result-text">睡眠の質が向上</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-deco"></div>
+          <div class="result-icon">
+            <svg viewBox="0 0 24 24"><path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/></svg>
+          </div>
+          <div class="result-text">疲れにくくなった</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-deco"></div>
+          <div class="result-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-6h2v2h-2zm0-8h2v6h-2z"/></svg>
+          </div>
+          <div class="result-text">イライラが減った</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-deco"></div>
+          <div class="result-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <div class="result-text">お通じの改善</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-deco"></div>
+          <div class="result-icon">
+            <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+          </div>
+          <div class="result-text">髪が増えてきた</div>
+        </div>
+      </div>
+      <div class="result-note">
+        → これらは全部「予防美容」の成果として発信できる
+      </div>
+    </div>
+
+    <!-- Before vs After -->
+    <div class="section-label">Before → After</div>
+    <div class="ba-grid">
+      <div class="ba-card ba-before">
+        <div class="ba-deco"></div>
+        <div class="ba-badge">BEFORE</div>
+        <h3>バラバラ</h3>
+        <div class="ba-detail">
+          美容と漢方が<strong>別々に見える</strong><br>
+          コンセプトが<strong>統一されていない</strong>
+        </div>
+        <div class="ba-pills">
+          <span class="ba-pill">漢方=怪しい</span>
+          <span class="ba-pill">バラバラ</span>
+          <span class="ba-pill">伝わらない</span>
+        </div>
+      </div>
+      <div class="ba-arrow-col">
+        <div class="ba-arrow-circle">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+      <div class="ba-card ba-after">
+        <div class="ba-deco"></div>
+        <div class="ba-badge">AFTER</div>
+        <h3>予防美容サロン</h3>
+        <div class="ba-detail">
+          「中も外もまるごとケア」で<strong>統一</strong><br>
+          宮崎で<strong>唯一のポジション</strong>
+        </div>
+        <div class="ba-pills">
+          <span class="ba-pill">自然</span>
+          <span class="ba-pill">統一</span>
+          <span class="ba-pill">唯一無二</span>
+        </div>
+      </div>
+    </div>
+    <div class="speed-badge-row">
+      <span class="speed-badge">唯一無二</span>
+    </div>
+
+    <!-- CTA -->
+    <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
+      <div class="cta-text">やっていることは何も変えなくていい</div>
+      <div class="cta-headline">「伝え方」を変えるだけで<br>最大の差別化が完成する</div>
+    </div>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>月美容室 Growth Strategy - Pillar 3</small>
+    <div class="dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+async function captureCard() {
+  return await html2canvas(document.getElementById('capture'), {
+    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+  });
+}
+async function downloadPNG() {
+  setLoading('btn-png', true);
+  try {
+    const c = await captureCard();
+    const a = document.createElement('a');
+    a.download = 'tsuki-pillar3-positioning.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+    showToast('PNGをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-png', false);
+}
+async function downloadPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const c = await captureCard();
+    const { jsPDF } = window.jspdf;
+    const w = 210, h = (c.height/c.width)*w;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[w,h] });
+    pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save('tsuki-pillar3-positioning.pdf');
+    showToast('PDFをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>

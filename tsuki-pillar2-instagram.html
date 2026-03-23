@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月美容室 柱2：Instagram集客導線の構築</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 40px; gap: 24px;
+  }
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px; border-radius: 16px;
+  }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); }
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border: none; border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-download .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1e1b4b; color: #fff; padding: 12px 28px;
+    border-radius: 12px; font-size: 13px; font-weight: 700;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #34d399; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .diagram-card { width: 900px; background: #ffffff; border-radius: 24px; overflow: hidden; }
+
+  /* ヘッダー - Instagramカラー系暗め */
+  .diagram-header {
+    background: linear-gradient(135deg, #5b1a8a 0%, #833AB4 30%, #9b2d6e 60%, #a8295e 100%);
+    color: #fff; padding: 44px 48px 36px; position: relative; overflow: hidden;
+  }
+  .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
+  .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(193,53,132,0.2); }
+  .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(225,48,108,0.12); }
+  .header-tag {
+    display: inline-block; background: rgba(225,48,108,0.35);
+    padding: 6px 18px; border-radius: 20px; font-size: 11px;
+    font-weight: 600; letter-spacing: 2px; margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+  .diagram-header h1 {
+    font-size: 28px; font-weight: 900; letter-spacing: 1px;
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .diagram-header .subtitle {
+    font-size: 14px; color: rgba(255,255,255,0.7);
+    position: relative; z-index: 1;
+  }
+
+  .diagram-body { padding: 36px 44px 40px; }
+  .section-label {
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 3px; color: #833AB4; margin-bottom: 16px;
+  }
+
+  /* 3ステップフロー */
+  .step-flow {
+    display: flex; gap: 12px; margin-bottom: 32px;
+  }
+  .step-card {
+    flex: 1; border-radius: 16px; padding: 22px 18px;
+    position: relative; overflow: hidden;
+  }
+  .step-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 70px; height: 70px; border-radius: 50%; pointer-events: none;
+  }
+  .step-red { background: linear-gradient(180deg, #fef2f2, #fff5f5); border: 2px solid #fecaca; }
+  .step-red .step-deco { background: rgba(239,68,68,0.08); }
+  .step-yellow { background: linear-gradient(180deg, #fffbeb, #fefce8); border: 2px solid #fde68a; }
+  .step-yellow .step-deco { background: rgba(234,179,8,0.08); }
+  .step-green { background: linear-gradient(180deg, #ecfdf5, #f0fdf4); border: 2px solid #a7f3d0; }
+  .step-green .step-deco { background: rgba(16,185,129,0.08); }
+  .step-num {
+    display: inline-block; padding: 4px 12px; border-radius: 10px;
+    font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 12px; position: relative; z-index: 1;
+  }
+  .step-red .step-num { background: #ef4444; color: #fff; }
+  .step-yellow .step-num { background: #eab308; color: #fff; }
+  .step-green .step-num { background: #10b981; color: #fff; }
+  .step-card h3 {
+    font-size: 14px; font-weight: 900; color: #1e1b4b;
+    margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .step-detail {
+    font-size: 11px; color: #4b5563; line-height: 1.8;
+    position: relative; z-index: 1;
+  }
+  .step-detail strong { font-weight: 800; }
+  .step-red .step-detail strong { color: #dc2626; }
+  .step-yellow .step-detail strong { color: #b45309; }
+  .step-green .step-detail strong { color: #059669; }
+  .step-arrow {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    align-self: center;
+  }
+  .step-arrow svg {
+    width: 20px; height: 20px; fill: none; stroke: #833AB4;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* 接続メッセージ */
+  .bridge-msg {
+    text-align: center; padding: 20px; margin-bottom: 32px;
+    background: linear-gradient(135deg, rgba(131,58,180,0.06), rgba(193,53,132,0.06));
+    border: 2px solid rgba(131,58,180,0.15);
+    border-radius: 16px;
+  }
+  .bridge-msg p {
+    font-size: 16px; font-weight: 900; color: #5b1a8a;
+  }
+  .bridge-msg p span { color: #C13584; }
+
+  /* アクションカード */
+  .action-card {
+    background: #fdf8ff; border: 2px solid #e9d5f5;
+    border-radius: 16px; padding: 24px; margin-bottom: 20px;
+  }
+  .action-title {
+    font-size: 15px; font-weight: 900; color: #5b1a8a; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .action-title-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: linear-gradient(135deg, #833AB4, #C13584);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .action-title-icon svg { width: 16px; height: 16px; fill: #fff; }
+  .action-list { list-style: none; }
+  .action-list li {
+    font-size: 12px; color: #374151; line-height: 1.8;
+    padding: 4px 0; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .action-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #833AB4; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; margin-top: 2px;
+  }
+  .action-check svg {
+    width: 10px; height: 10px; fill: none; stroke: #fff;
+    stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* SNSコンテンツグリッド */
+  .sns-content-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-top: 8px;
+  }
+  .sns-item {
+    background: #fff; border: 1.5px solid #e9d5f5;
+    border-radius: 12px; padding: 14px 12px;
+    text-align: center; position: relative;
+  }
+  .sns-item-num {
+    position: absolute; top: -6px; left: -6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #833AB4, #C13584);
+    color: #fff; font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sns-item-title {
+    font-size: 12px; font-weight: 800; color: #5b1a8a; margin-bottom: 4px;
+  }
+  .sns-item-desc {
+    font-size: 10px; color: #6b7280; line-height: 1.5;
+  }
+
+  /* CTAアクションカード */
+  .cta-action-list { list-style: none; }
+  .cta-action-list li {
+    font-size: 12px; color: #374151; line-height: 1.8;
+    padding: 4px 0; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .cta-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 8px;
+    background: rgba(131,58,180,0.1); color: #833AB4;
+    font-size: 10px; font-weight: 800; white-space: nowrap;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* Before/After比較 */
+  .compare-section { margin-bottom: 32px; }
+  .compare-grid {
+    display: flex; gap: 16px;
+  }
+  .compare-box {
+    flex: 1; border-radius: 16px; padding: 24px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .compare-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 70px; height: 70px; border-radius: 50%; pointer-events: none;
+  }
+  .compare-before { background: #fef2f2; border: 2px solid #fecaca; }
+  .compare-before .compare-deco { background: rgba(239,68,68,0.08); }
+  .compare-after { background: #ecfdf5; border: 2px solid #a7f3d0; }
+  .compare-after .compare-deco { background: rgba(16,185,129,0.08); }
+  .compare-label {
+    font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 6px;
+    position: relative; z-index: 1;
+  }
+  .compare-before .compare-label { color: #ef4444; }
+  .compare-after .compare-label { color: #059669; }
+  .compare-subtitle {
+    font-size: 11px; color: #6b7280; margin-bottom: 10px;
+    position: relative; z-index: 1;
+  }
+  .compare-number {
+    font-size: 36px; font-weight: 900; margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+  .compare-before .compare-number { color: #dc2626; }
+  .compare-after .compare-number { color: #059669; }
+  .compare-desc {
+    font-size: 11px; color: #6b7280; line-height: 1.7;
+    position: relative; z-index: 1; text-align: left; margin-bottom: 10px;
+  }
+  .compare-pills {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 8px;
+    font-size: 9px; font-weight: 800;
+  }
+  .pill-red { background: #fee2e2; color: #dc2626; }
+  .pill-green { background: #d1fae5; color: #059669; }
+  .compare-arrow-col {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .compare-arrow-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #833AB4, #C13584);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .compare-arrow-circle svg {
+    width: 20px; height: 20px; fill: none; stroke: #fff;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .speed-badge {
+    text-align: center; margin-top: 12px;
+  }
+  .speed-badge span {
+    display: inline-block; padding: 6px 20px; border-radius: 10px;
+    background: linear-gradient(135deg, #833AB4, #C13584);
+    color: #fff; font-size: 13px; font-weight: 800;
+  }
+
+  /* シミュレーション */
+  .sim-grid {
+    display: flex; gap: 12px; margin-bottom: 32px;
+  }
+  .sim-card {
+    flex: 1; background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 14px; padding: 18px; text-align: center;
+  }
+  .sim-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; margin-bottom: 6px; }
+  .sim-value { font-size: 22px; font-weight: 900; color: #1e1b4b; }
+  .sim-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+  .sim-highlight {
+    flex: 1; background: linear-gradient(135deg, rgba(131,58,180,0.08), rgba(193,53,132,0.08));
+    border: 2px solid rgba(131,58,180,0.2);
+    border-radius: 14px; padding: 18px; text-align: center;
+  }
+  .sim-highlight .sim-label { color: #833AB4; }
+  .sim-highlight .sim-value { color: #5b1a8a; font-size: 24px; }
+
+  /* ボトムCTA */
+  .bottom-cta {
+    text-align: center; padding: 28px;
+    background: linear-gradient(135deg, #5b1a8a 0%, #833AB4 50%, #9b2d6e 100%);
+    border-radius: 20px; position: relative; overflow: hidden;
+  }
+  .cta-deco-1 {
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(225,48,108,0.15); pointer-events: none;
+  }
+  .cta-deco-2 {
+    position: absolute; bottom: -40px; left: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(193,53,132,0.1); pointer-events: none;
+  }
+  .cta-text {
+    font-size: 13px; color: rgba(255,255,255,0.6);
+    margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .cta-headline {
+    font-size: 20px; font-weight: 900; color: #f0d0ff;
+    line-height: 1.6; position: relative; z-index: 1;
+  }
+
+  .diagram-footer {
+    padding: 16px 44px; border-top: 1px solid #f3f4f6;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .diagram-footer small { font-size: 10px; color: #d1d5db; }
+  .diagram-footer .dots { display: flex; gap: 4px; }
+  .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
+  .diagram-footer .dots span:nth-child(2) { background: #C13584; }
+
+  .mb-32 { margin-bottom: 32px; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">ダウンロード:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+
+<div class="diagram-card" id="capture">
+
+  <!-- ヘッダー -->
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="header-tag">PILLAR 2 / 3</div>
+    <h1>2つ目の柱 - Instagram集客導線の構築</h1>
+    <p class="subtitle">発信はしている。あとは「来店」につなげる導線を作るだけ</p>
+  </div>
+
+  <div class="diagram-body">
+
+    <!-- 3ステップフロー -->
+    <div class="section-label">3-Step Flow</div>
+    <div class="step-flow">
+      <div class="step-card step-red">
+        <div class="step-deco"></div>
+        <div class="step-num">STEP 1</div>
+        <h3>現状の課題</h3>
+        <div class="step-detail">
+          週2〜3回投稿はしている<br>
+          自分の写真付き投稿は反応が高い<br>
+          でも新規は<strong>月0〜2名</strong>しか来ない<br>
+          → <strong>導線が弱い</strong>
+        </div>
+      </div>
+      <div class="step-arrow">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+      <div class="step-card step-yellow">
+        <div class="step-deco"></div>
+        <div class="step-num">STEP 2</div>
+        <h3>なぜInstagramか</h3>
+        <div class="step-detail">
+          Instagram経由の新規は<strong>リピート率が高い</strong>（本人の回答）<br>
+          「来てほしいお客様」に直接届く<br>
+          チラシと違って<strong>コストゼロ</strong>
+        </div>
+      </div>
+      <div class="step-arrow">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+      <div class="step-card step-green">
+        <div class="step-deco"></div>
+        <div class="step-num">STEP 3</div>
+        <h3>導線を整える</h3>
+        <div class="step-detail">
+          <strong>プロフィール → LINE予約 → 来店</strong>の流れを明確に<br>
+          投稿にCTA（行動喚起）を毎回入れる<br>
+          ペルソナを固定して<strong>「誰に向けて」をブラさない</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 接続メッセージ -->
+    <div class="bridge-msg">
+      <p>発信力はある。あとは<span>導線を整えるだけ</span></p>
+    </div>
+
+    <!-- 具体アクション -->
+    <div class="section-label">Action Plan</div>
+
+    <!-- アクション1: プロフィールを整える -->
+    <div class="action-card">
+      <div class="action-title">
+        <div class="action-title-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        プロフィールを整える
+      </div>
+      <ul class="action-list">
+        <li>
+          <div class="action-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>「何の専門」「誰向け」「どこにある」を明記</span>
+        </li>
+        <li>
+          <div class="action-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>LINE予約リンクをわかりやすく</span>
+        </li>
+        <li>
+          <div class="action-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>ハイライトに「メニュー」「お客様の声」「漢方について」を整理</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- アクション2: 投稿の型を決める -->
+    <div class="action-card">
+      <div class="action-title">
+        <div class="action-title-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+        </div>
+        投稿の型を決める
+      </div>
+      <div class="sns-content-grid">
+        <div class="sns-item">
+          <div class="sns-item-num">1</div>
+          <div class="sns-item-title">ビフォーアフター</div>
+          <div class="sns-item-desc">施術結果<br>反応が取れる王道</div>
+        </div>
+        <div class="sns-item">
+          <div class="sns-item-num">2</div>
+          <div class="sns-item-title">自分の写真付き投稿</div>
+          <div class="sns-item-desc">本人のデータで<br>反応が高いと証明済み</div>
+        </div>
+        <div class="sns-item">
+          <div class="sns-item-num">3</div>
+          <div class="sns-item-title">お客様の声</div>
+          <div class="sns-item-desc">リピーター30〜40名の<br>声を活用</div>
+        </div>
+        <div class="sns-item">
+          <div class="sns-item-num">4</div>
+          <div class="sns-item-title">予防美容の豆知識</div>
+          <div class="sns-item-desc">漢方を「予防美容」として<br>自然に発信</div>
+        </div>
+        <div class="sns-item">
+          <div class="sns-item-num">5</div>
+          <div class="sns-item-title">サロンの雰囲気</div>
+          <div class="sns-item-desc">マンツーマン・<br>安心感を伝える</div>
+        </div>
+        <div class="sns-item">
+          <div class="sns-item-num">6</div>
+          <div class="sns-item-title">空き状況告知</div>
+          <div class="sns-item-desc">ゼロ客日をなくす<br>即効策</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- アクション3: 毎回CTAを入れる -->
+    <div class="action-card">
+      <div class="action-title">
+        <div class="action-title-icon">
+          <svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg>
+        </div>
+        毎回CTAを入れる
+      </div>
+      <ul class="cta-action-list">
+        <li>
+          <span class="cta-badge">投稿</span>
+          <span>「ご予約はプロフィールのLINEから」</span>
+        </li>
+        <li>
+          <span class="cta-badge">DM</span>
+          <span>「気になる方はDMでご相談ください」</span>
+        </li>
+        <li>
+          <span class="cta-badge">ストーリーズ</span>
+          <span>ストーリーズで空き状況を発信</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- アクション4: ペルソナを固定する -->
+    <div class="action-card mb-32">
+      <div class="action-title">
+        <div class="action-title-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        </div>
+        ペルソナを固定する
+      </div>
+      <ul class="action-list">
+        <li>
+          <div class="action-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>「仕事や人間関係で精神的にしんどくなりやすい<strong>30〜50代女性</strong>」</span>
+        </li>
+        <li>
+          <div class="action-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>「発信相手が浮かばない」問題が<strong>解決する</strong></span>
+        </li>
+        <li>
+          <div class="action-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <span>迷ったら<strong>この人に向けて書く</strong></span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Before vs After -->
+    <div class="section-label">Before vs After</div>
+    <div class="compare-section">
+      <div class="compare-grid">
+        <div class="compare-box compare-before">
+          <div class="compare-deco"></div>
+          <div class="compare-label">BEFORE</div>
+          <div class="compare-subtitle">Instagram経由の新規</div>
+          <div class="compare-number">月0〜2名</div>
+          <div class="compare-desc">
+            発信はしてるけど来店につながらない<br>
+            プロフィールが整理されていない
+          </div>
+          <div class="compare-pills">
+            <span class="pill pill-red">導線なし</span>
+            <span class="pill pill-red">ペルソナ曖昧</span>
+            <span class="pill pill-red">CTA弱い</span>
+          </div>
+        </div>
+        <div class="compare-arrow-col">
+          <div class="compare-arrow-circle">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </div>
+        </div>
+        <div class="compare-box compare-after">
+          <div class="compare-deco"></div>
+          <div class="compare-label">AFTER</div>
+          <div class="compare-subtitle">Instagram経由の新規</div>
+          <div class="compare-number">月3〜5名</div>
+          <div class="compare-desc">
+            理想のお客様がInstagramから自然に来る
+          </div>
+          <div class="compare-pills">
+            <span class="pill pill-green">導線あり</span>
+            <span class="pill pill-green">ペルソナ明確</span>
+            <span class="pill pill-green">CTA毎回</span>
+          </div>
+        </div>
+      </div>
+      <div class="speed-badge">
+        <span>+3〜5名/月</span>
+      </div>
+    </div>
+
+    <!-- シミュレーション -->
+    <div class="section-label">Simulation</div>
+    <div class="sim-grid">
+      <div class="sim-card">
+        <div class="sim-label">Instagram経由 新規</div>
+        <div class="sim-value">月3名</div>
+      </div>
+      <div class="sim-card">
+        <div class="sim-label">リピート率</div>
+        <div class="sim-value">70%</div>
+      </div>
+      <div class="sim-card">
+        <div class="sim-label">半年後 累計定着数</div>
+        <div class="sim-value">+12名</div>
+      </div>
+      <div class="sim-highlight">
+        <div class="sim-label">売上増加</div>
+        <div class="sim-value">+180,000円/月</div>
+        <div class="sim-sub">+12名 &times; 15,000円</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
+      <div class="cta-text">発信力はすでにある</div>
+      <div class="cta-headline">プロフィールとCTAを整えるだけで<br>Instagramが集客マシンに変わる</div>
+    </div>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>月美容室 Growth Strategy - Pillar 2</small>
+    <div class="dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+async function captureCard() {
+  return await html2canvas(document.getElementById('capture'), {
+    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+  });
+}
+async function downloadPNG() {
+  setLoading('btn-png', true);
+  try {
+    const c = await captureCard();
+    const a = document.createElement('a');
+    a.download = 'tsuki-pillar2-instagram.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+    showToast('PNGをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-png', false);
+}
+async function downloadPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const c = await captureCard();
+    const { jsPDF } = window.jspdf;
+    const w = 210, h = (c.height/c.width)*w;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:[w,h] });
+    pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save('tsuki-pillar2-instagram.pdf');
+    showToast('PDFをダウンロードしました');
+  } catch(e) { showToast('エラーが発生しました'); }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>
