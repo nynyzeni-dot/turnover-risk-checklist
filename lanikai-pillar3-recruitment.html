@@ -3,678 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3つ目の柱 - スタッフ採用（業務委託）</title>
+<title>3つ目の柱 - スタッフ採用 × SNS発信</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     background: #0f0f1a;
     font-family: 'Noto Sans JP', 'Segoe UI', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 40px;
-    gap: 24px;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 40px; gap: 24px;
   }
-
-  /* ===== ツールバー ===== */
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 12px 24px;
-    border-radius: 16px;
-  }
-
-  .toolbar-label {
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.5);
-    margin-right: 4px;
-  }
-
-  .btn-download {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 22px;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-download:hover {
-    transform: translateY(-1px);
-  }
-
+  .toolbar { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 12px 24px; border-radius: 16px; }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); margin-right: 4px; }
+  .btn-download { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border: none; border-radius: 12px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .btn-download:hover { transform: translateY(-1px); }
   .btn-download:active { transform: translateY(0); }
-
-  .btn-download:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
-
   .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
   .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-
-  .btn-download .spinner {
-    display: none;
-    width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-
+  .btn-download .spinner { display: none; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
   .btn-download.loading .spinner { display: block; }
   .btn-download.loading .btn-icon { display: none; }
-
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* トースト */
-  .toast {
-    position: fixed;
-    top: 24px; left: 50%;
-    transform: translateX(-50%) translateY(-80px);
-    background: #1e1b4b;
-    color: #fff;
-    padding: 12px 28px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 700;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
+  .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #1e1b4b; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 13px; font-weight: 700; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; display: flex; align-items: center; gap: 8px; }
   .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #34d399; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
-  .toast svg {
-    width: 18px; height: 18px;
-    fill: none; stroke: #34d399;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+  .diagram-card { width: 880px; background: #ffffff; border-radius: 24px; overflow: hidden; }
 
-  /* ===== カード ===== */
-  .diagram-card {
-    width: 880px;
-    background: #ffffff;
-    border-radius: 24px;
-    overflow: hidden;
-  }
-
-  /* ===== ヘッダー ===== */
   .diagram-header {
     background: linear-gradient(135deg, #1e3a5f 0%, #0d2137 50%, #1a4a3a 100%);
-    color: #fff;
-    padding: 48px 48px 44px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
+    color: #fff; padding: 48px 48px 44px; text-align: center; position: relative; overflow: hidden;
   }
+  .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
+  .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(212,175,55,0.1); }
+  .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(212,175,55,0.06); }
+  .header-tag { display: inline-block; background: rgba(212,175,55,0.25); color: #d4af37; padding: 6px 18px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; position: relative; z-index: 1; }
+  .diagram-header h1 { font-size: 26px; font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; position: relative; z-index: 1; }
+  .diagram-header .subtitle { font-size: 14px; color: rgba(255,255,255,0.7); position: relative; z-index: 1; }
 
-  .deco-circle {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
-  .header-deco-1 {
-    top: -40px; right: -40px;
-    width: 200px; height: 200px;
-    background: rgba(212,175,55,0.1);
-  }
-
-  .header-deco-2 {
-    bottom: -60px; left: -30px;
-    width: 160px; height: 160px;
-    background: rgba(212,175,55,0.06);
-  }
-
-  .header-tag {
-    display: inline-block;
-    background: rgba(212,175,55,0.25);
-    color: #d4af37;
-    padding: 6px 18px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    position: relative; z-index: 1;
-  }
-
-  .diagram-header h1 {
-    font-size: 28px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    position: relative; z-index: 1;
-  }
-
-  .diagram-header .subtitle {
-    font-size: 14px;
-    color: rgba(255,255,255,0.7);
-    position: relative; z-index: 1;
-  }
-
-  /* ===== メイン ===== */
   .diagram-body { padding: 44px 44px 40px; }
-
-  .section-label {
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    color: #1e3a5f;
-    margin-bottom: 22px;
-  }
+  .section-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: #1e3a5f; margin-bottom: 22px; }
 
   /* フロー */
-  .flow {
-    display: flex;
-    align-items: stretch;
-    margin-bottom: 8px;
-  }
-
-  .flow-step {
-    flex: 1;
-    text-align: center;
-    padding: 28px 16px;
-    border-radius: 18px;
-    position: relative;
-  }
-
-  .flow-step .step-number {
-    position: absolute;
-    top: 10px; left: 14px;
-    font-size: 11px;
-    font-weight: 800;
-    color: #d1d5db;
-  }
-
-  .flow-step .icon-wrap {
-    width: 80px; height: 80px;
-    border-radius: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 18px;
-  }
-
+  .flow { display: flex; align-items: stretch; margin-bottom: 8px; }
+  .flow-step { flex: 1; text-align: center; padding: 28px 16px; border-radius: 18px; position: relative; }
+  .flow-step .step-number { position: absolute; top: 10px; left: 14px; font-size: 11px; font-weight: 800; color: #d1d5db; }
+  .flow-step .icon-wrap { width: 80px; height: 80px; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
   .flow-step .icon-wrap svg { width: 40px; height: 40px; }
-
   .icon-red { background: #fee2e2; }
   .icon-red svg { fill: #dc2626; }
-
   .icon-amber { background: #fef3c7; }
   .icon-amber svg { fill: #d97706; }
-
   .icon-green { background: #d1fae5; }
   .icon-green svg { fill: #059669; }
-
-  .flow-step h3 {
-    font-size: 16px;
-    font-weight: 800;
-    color: #1e1b4b;
-    margin-bottom: 10px;
-    line-height: 1.4;
-  }
-
-  .flow-step p {
-    font-size: 12.5px;
-    color: #6b7280;
-    line-height: 1.7;
-  }
-
-  .kw-red    { color: #dc2626; font-weight: 700; }
-  .kw-amber  { color: #d97706; font-weight: 700; }
-  .kw-green  { color: #059669; font-weight: 700; }
-
-  .flow-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    flex-shrink: 0;
-  }
-
-  .flow-arrow .arrow-icon {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1e3a5f, #0d2137);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .flow-arrow .arrow-icon svg {
-    width: 18px; height: 18px;
-    fill: none; stroke: #fff;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+  .flow-step h3 { font-size: 16px; font-weight: 800; color: #1e1b4b; margin-bottom: 10px; line-height: 1.4; }
+  .flow-step p { font-size: 12.5px; color: #6b7280; line-height: 1.7; }
+  .kw-red { color: #dc2626; font-weight: 700; }
+  .kw-amber { color: #d97706; font-weight: 700; }
+  .kw-green { color: #059669; font-weight: 700; }
+  .flow-arrow { display: flex; align-items: center; justify-content: center; width: 48px; flex-shrink: 0; }
+  .flow-arrow .arrow-icon { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #1e3a5f, #0d2137); display: flex; align-items: center; justify-content: center; }
+  .flow-arrow .arrow-icon svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
   /* 接続 */
-  .connector {
-    text-align: center;
-    padding: 16px 0 32px;
-    position: relative;
-  }
-
-  .connector-line-top,
-  .connector-line-bottom {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    height: 14px;
-    background: #1e3a5f;
-  }
-
+  .connector { text-align: center; padding: 16px 0 32px; position: relative; }
+  .connector-line-top, .connector-line-bottom { position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 14px; background: #1e3a5f; }
   .connector-line-top { top: 0; }
   .connector-line-bottom { bottom: 4px; }
+  .connector .connector-badge { display: inline-flex; align-items: center; gap: 8px; background: #f0f4f8; border: 1.5px solid #c8d6e5; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 700; color: #1e3a5f; }
+  .connector .connector-badge svg { width: 16px; height: 16px; fill: none; stroke: #1e3a5f; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  .connector .connector-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #f0f4f8;
-    border: 1.5px solid #c8d6e5;
-    padding: 10px 24px;
-    border-radius: 30px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e3a5f;
-  }
+  /* 詳細セクション */
+  .detail-section { margin-bottom: 28px; }
+  .detail-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 16px; padding-left: 14px; border-left: 4px solid #d4af37; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  .connector .connector-badge svg {
-    width: 16px; height: 16px;
-    fill: none; stroke: #1e3a5f;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+  .detail-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; }
+  .detail-card .card-label { font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; }
+  .detail-card .card-value { font-size: 20px; font-weight: 900; color: #1e3a5f; }
+  .detail-card .card-value small { font-size: 12px; font-weight: 600; color: #64748b; }
+  .detail-card .card-note { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 
-  /* ===== 詳細セクション ===== */
-  .detail-section {
-    margin-bottom: 28px;
-  }
+  .merit-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .merit-item { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .merit-item .check-icon { width: 24px; height: 24px; border-radius: 50%; background: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .merit-item .check-icon svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .merit-item span { font-size: 13px; font-weight: 700; color: #1e3a5f; }
 
-  .detail-title {
-    font-size: 15px;
-    font-weight: 800;
-    color: #1e3a5f;
-    margin-bottom: 16px;
-    padding-left: 14px;
-    border-left: 4px solid #d4af37;
-  }
+  /* SNSセクション */
+  .sns-section { margin-bottom: 28px; }
+  .sns-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding-left: 14px; border-left: 4px solid #E1306C; }
+  .sns-header h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; }
 
-  .detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
+  .sns-why-box { background: linear-gradient(135deg, #fdf2f8, #fce7f3); border: 2px solid #f9a8d4; border-radius: 16px; padding: 24px; margin-bottom: 18px; }
+  .sns-why-box h4 { font-size: 14px; font-weight: 800; color: #be185d; margin-bottom: 12px; }
+  .sns-why-list { list-style: none; }
+  .sns-why-list li { font-size: 13px; color: #6b7280; line-height: 1.8; padding-left: 20px; position: relative; }
+  .sns-why-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #E1306C; }
 
-  .detail-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 18px 20px;
-  }
+  .sns-flow { display: flex; gap: 12px; margin-bottom: 18px; }
+  .sns-flow-step { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px 14px; text-align: center; }
+  .sns-flow-num { font-size: 11px; font-weight: 800; color: #E1306C; margin-bottom: 8px; }
+  .sns-flow-step h4 { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 6px; }
+  .sns-flow-step p { font-size: 11px; color: #94a3b8; line-height: 1.5; }
 
-  .detail-card .card-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    margin-bottom: 6px;
-  }
+  .sns-content-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .sns-content-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 14px; padding: 18px 14px; text-align: center; transition: all 0.2s; }
+  .sns-content-card .card-emoji { font-size: 28px; margin-bottom: 8px; display: block; }
+  .sns-content-card h5 { font-size: 13px; font-weight: 800; color: #1e3a5f; margin-bottom: 4px; }
+  .sns-content-card p { font-size: 10.5px; color: #94a3b8; line-height: 1.4; }
+  .sns-content-card.highlight { border-color: #E1306C; background: #fdf2f8; }
+  .sns-content-card.recruit-card { border-color: #059669; background: #f0fdf4; }
 
-  .detail-card .card-value {
-    font-size: 20px;
-    font-weight: 900;
-    color: #1e3a5f;
-  }
-
-  .detail-card .card-value small {
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-  }
-
-  .detail-card .card-note {
-    font-size: 11px;
-    color: #94a3b8;
-    margin-top: 4px;
-  }
-
-  .merit-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .merit-item {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 12px;
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .merit-item .check-icon {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: #059669;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .merit-item .check-icon svg {
-    width: 14px; height: 14px;
-    fill: none; stroke: #fff;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .merit-item span {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e3a5f;
-  }
+  /* ツール紹介 */
+  .tool-box { background: linear-gradient(135deg, #1e3a5f, #0d2137); border-radius: 18px; padding: 28px; text-align: center; margin-bottom: 18px; }
+  .tool-box h4 { font-size: 16px; font-weight: 900; color: #d4af37; margin-bottom: 10px; }
+  .tool-box p { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 16px; line-height: 1.7; }
+  .tool-features { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .tool-feature { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 16px; }
+  .tool-feature span { font-size: 12px; font-weight: 700; color: #fff; }
 
   /* 比較 */
-  .comparison {
-    display: flex;
-    gap: 20px;
-    align-items: stretch;
-    margin-bottom: 8px;
-  }
-
-  .comparison-box {
-    flex: 1;
-    border-radius: 20px;
-    padding: 32px 24px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .comparison-box.before {
-    background: #fee2e2;
-    border: 2px solid #fecaca;
-  }
-
-  .comparison-box.after {
-    background: #d1fae5;
-    border: 2px solid #a7f3d0;
-  }
-
-  .comparison-deco {
-    position: absolute;
-    top: -20px; right: -20px;
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
+  .comparison { display: flex; gap: 20px; align-items: stretch; margin-bottom: 8px; }
+  .comparison-box { flex: 1; border-radius: 20px; padding: 28px 20px; text-align: center; position: relative; overflow: hidden; }
+  .comparison-box.before { background: #fee2e2; border: 2px solid #fecaca; }
+  .comparison-box.after { background: #d1fae5; border: 2px solid #a7f3d0; }
+  .comparison-deco { position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; pointer-events: none; }
   .before .comparison-deco { background: rgba(239,68,68,0.08); }
   .after .comparison-deco { background: rgba(16,185,129,0.08); }
-
-  .comparison-box .label {
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 2.5px;
-    margin-bottom: 14px;
-    position: relative; z-index: 1;
-  }
-
+  .comparison-box .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 10px; position: relative; z-index: 1; }
   .comparison-box.before .label { color: #ef4444; }
   .comparison-box.after .label { color: #059669; }
-
-  .comparison-box .big-number {
-    font-size: 44px;
-    font-weight: 900;
-    margin-bottom: 2px;
-    position: relative; z-index: 1;
-    line-height: 1.1;
-  }
-
+  .comparison-box .big-number { font-size: 40px; font-weight: 900; margin-bottom: 2px; position: relative; z-index: 1; line-height: 1.1; }
   .comparison-box.before .big-number { color: #dc2626; }
   .comparison-box.after .big-number { color: #059669; }
-
-  .comparison-box .desc {
-    font-size: 12.5px;
-    color: #6b7280;
-    position: relative; z-index: 1;
-    margin-bottom: 12px;
-  }
-
-  .desc-steps {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    position: relative; z-index: 1;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-
-  .step-pill {
-    font-size: 10px;
-    padding: 4px 10px;
-    border-radius: 10px;
-    font-weight: 600;
-  }
-
+  .comparison-box .desc { font-size: 12px; color: #6b7280; position: relative; z-index: 1; margin-bottom: 10px; }
+  .desc-steps { display: flex; justify-content: center; gap: 6px; position: relative; z-index: 1; margin-bottom: 14px; flex-wrap: wrap; }
+  .step-pill { font-size: 10px; padding: 4px 10px; border-radius: 10px; font-weight: 600; }
   .before .step-pill { background: rgba(239,68,68,0.15); color: #dc2626; }
   .after .step-pill { background: rgba(16,185,129,0.15); color: #059669; }
-
-  .progress-bar-wrap {
-    position: relative; z-index: 1;
-    height: 8px;
-    background: rgba(0,0,0,0.08);
-    border-radius: 4px;
-    overflow: hidden;
-    margin: 0 12px;
-  }
-
+  .progress-bar-wrap { position: relative; z-index: 1; height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; margin: 0 12px; }
   .progress-bar-fill { height: 100%; border-radius: 4px; }
-  .before .progress-bar-fill { width: 65%; background: #ef4444; }
+  .before .progress-bar-fill { width: 50%; background: #ef4444; }
   .after .progress-bar-fill { width: 100%; background: #10b981; }
-
-  .vs-divider {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    gap: 8px;
-  }
-
-  .vs-badge {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: #1e3a5f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 1px;
-  }
-
-  .speed-badge {
-    background: #d4af37;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 800;
-    padding: 4px 12px;
-    border-radius: 12px;
-    white-space: nowrap;
-  }
+  .vs-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: 8px; }
+  .vs-badge { width: 44px; height: 44px; border-radius: 50%; background: #1e3a5f; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; letter-spacing: 1px; }
+  .speed-badge { background: #d4af37; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 12px; white-space: nowrap; }
 
   /* シミュレーション */
-  .sim-box {
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
-    border-radius: 18px;
-    padding: 28px;
-    margin-top: 24px;
-  }
-
-  .sim-title {
-    font-size: 14px;
-    font-weight: 800;
-    color: #1e3a5f;
-    margin-bottom: 18px;
-    text-align: center;
-  }
-
-  .sim-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .sim-row:last-child {
-    border-bottom: none;
-    padding-top: 14px;
-  }
-
-  .sim-row .sim-label {
-    font-size: 13px;
-    color: #64748b;
-    font-weight: 600;
-  }
-
-  .sim-row .sim-value {
-    font-size: 16px;
-    font-weight: 800;
-    color: #1e3a5f;
-  }
-
-  .sim-row.highlight {
-    background: #f0fdf4;
-    border-radius: 10px;
-    padding: 12px 16px;
-    border-bottom: none;
-    margin-top: 4px;
-  }
-
-  .sim-row.highlight .sim-value {
-    color: #059669;
-    font-size: 20px;
-  }
+  .sim-box { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 18px; padding: 28px; margin-top: 24px; }
+  .sim-title { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 18px; text-align: center; }
+  .sim-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+  .sim-row:last-child { border-bottom: none; padding-top: 14px; }
+  .sim-row .sim-label { font-size: 13px; color: #64748b; font-weight: 600; }
+  .sim-row .sim-value { font-size: 16px; font-weight: 800; color: #1e3a5f; }
+  .sim-row.highlight { background: #f0fdf4; border-radius: 10px; padding: 12px 16px; border-bottom: none; margin-top: 4px; }
+  .sim-row.highlight .sim-value { color: #059669; font-size: 20px; }
 
   /* ボトムCTA */
-  .bottom-cta {
-    margin-top: 36px;
-    text-align: center;
-    padding: 32px 28px;
-    background: #1e3a5f;
-    border-radius: 20px;
-    position: relative;
-    overflow: hidden;
-  }
+  .bottom-cta { margin-top: 36px; text-align: center; padding: 32px 28px; background: #1e3a5f; border-radius: 20px; position: relative; overflow: hidden; }
+  .cta-deco-1 { position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(212,175,55,0.12); pointer-events: none; }
+  .cta-deco-2 { position: absolute; bottom: -40px; left: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(212,175,55,0.08); pointer-events: none; }
+  .bottom-cta .cta-icon { width: 48px; height: 48px; margin: 0 auto 14px; background: rgba(212,175,55,0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+  .bottom-cta .cta-icon svg { width: 26px; height: 26px; fill: none; stroke: #d4af37; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .bottom-cta .cta-text { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 8px; position: relative; z-index: 1; }
+  .bottom-cta .cta-headline { font-size: 20px; font-weight: 900; color: #d4af37; line-height: 1.5; position: relative; z-index: 1; }
 
-  .cta-deco-1 {
-    position: absolute;
-    top: -30px; right: -30px;
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    background: rgba(212,175,55,0.12);
-    pointer-events: none;
-  }
-
-  .cta-deco-2 {
-    position: absolute;
-    bottom: -40px; left: -20px;
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    background: rgba(212,175,55,0.08);
-    pointer-events: none;
-  }
-
-  .bottom-cta .cta-icon {
-    width: 48px; height: 48px;
-    margin: 0 auto 14px;
-    background: rgba(212,175,55,0.2);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .bottom-cta .cta-icon svg {
-    width: 26px; height: 26px;
-    fill: none; stroke: #d4af37;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .bottom-cta .cta-text {
-    font-size: 13px;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 8px;
-    position: relative; z-index: 1;
-  }
-
-  .bottom-cta .cta-headline {
-    font-size: 20px;
-    font-weight: 900;
-    color: #d4af37;
-    line-height: 1.5;
-    position: relative; z-index: 1;
-  }
-
-  /* フッター */
-  .diagram-footer {
-    padding: 16px 44px;
-    border-top: 1px solid #f3f4f6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
+  .diagram-footer { padding: 16px 44px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
   .diagram-footer small { font-size: 10px; color: #d1d5db; }
   .diagram-footer .dots { display: flex; gap: 4px; }
-
-  .diagram-footer .dots span {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #e5e7eb;
-  }
-
+  .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
   .diagram-footer .dots span:last-child { background: #d4af37; }
 </style>
 </head>
@@ -685,44 +187,34 @@
   <span id="toast-text"></span>
 </div>
 
-<!-- ツールバー -->
 <div class="toolbar" id="toolbar">
   <span class="toolbar-label">ダウンロード:</span>
   <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
     <span class="spinner"></span>
-    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <path d="m21 15-5-5L5 21"/>
-    </svg>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
     <span class="btn-text">PNG</span>
   </button>
   <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
     <span class="spinner"></span>
-    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <path d="M14 2v6h6"/>
-      <path d="M12 18v-6"/>
-      <path d="m9 15 3 3 3-3"/>
-    </svg>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
     <span class="btn-text">PDF</span>
   </button>
 </div>
 
-<!-- 図解カード -->
 <div class="diagram-card" id="capture">
 
   <div class="diagram-header">
     <div class="deco-circle header-deco-1"></div>
     <div class="deco-circle header-deco-2"></div>
     <div class="header-tag">PILLAR 3 / 3</div>
-    <h1>3つ目の柱 - スタッフ採用（業務委託）</h1>
-    <p class="subtitle">1人の限界を超えて、売上も休みも両立する体制をつくる</p>
+    <h1>3つ目の柱 - スタッフ採用 × SNS発信</h1>
+    <p class="subtitle">求人も集客もSNSが鍵。簡単に始められる仕組みで一歩を踏み出す</p>
   </div>
 
   <div class="diagram-body">
 
-    <div class="section-label">なぜスタッフが必要なのか</div>
+    <!-- ===== なぜスタッフが必要か ===== -->
+    <div class="section-label">WHY - なぜスタッフが必要なのか</div>
 
     <div class="flow">
       <div class="flow-step">
@@ -731,37 +223,25 @@
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
         </div>
         <h3><span class="kw-red">1人体制の限界</span></h3>
-        <p>1日5名 x 22日 = <span class="kw-red">月110名が上限</span>。これ以上は物理的に増やせない</p>
+        <p>1日5名 x 22日 = <span class="kw-red">月110名が上限</span>。これ以上は増やせない</p>
       </div>
-
-      <div class="flow-arrow">
-        <div class="arrow-icon">
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </div>
-
+      <div class="flow-arrow"><div class="arrow-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
       <div class="flow-step">
         <span class="step-number">02</span>
         <div class="icon-wrap icon-amber">
           <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
         </div>
         <h3><span class="kw-amber">休めない構造</span></h3>
-        <p>休みを取ると<span class="kw-amber">売上が直接減る</span>。月5日以下の休みでは体がもたない</p>
+        <p>休むと<span class="kw-amber">売上が直接減る</span>。月5日以下の休みでは体がもたない</p>
       </div>
-
-      <div class="flow-arrow">
-        <div class="arrow-icon">
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </div>
-
+      <div class="flow-arrow"><div class="arrow-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
       <div class="flow-step">
         <span class="step-number">03</span>
         <div class="icon-wrap icon-green">
           <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
         </div>
         <h3><span class="kw-green">業務委託で解決</span></h3>
-        <p><span class="kw-green">リスクを最小限</span>に抑えながら、売上の天井を突破できる</p>
+        <p><span class="kw-green">低リスク</span>で始められて、売上も休みも確保できる</p>
       </div>
     </div>
 
@@ -769,237 +249,214 @@
       <div class="connector-line-top"></div>
       <div class="connector-badge">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-        業務委託なら低リスクで始められる
+        でも個人店の求人は簡単じゃない。だからSNSが必要
       </div>
       <div class="connector-line-bottom"></div>
     </div>
 
-    <!-- 業務委託メリット -->
-    <div class="detail-section">
-      <div class="detail-title">業務委託のメリット（正社員との違い）</div>
-      <div class="merit-list">
-        <div class="merit-item">
-          <div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
-          <span>社会保険料の負担なし</span>
+    <!-- ===== SNS発信 ===== -->
+    <div class="sns-section">
+      <div class="sns-header">
+        <h3>SNS発信が「集客」と「求人」の両方を解決する</h3>
+      </div>
+
+      <div class="sns-why-box">
+        <h4>個人店が媒体だけでは求人が取れない理由</h4>
+        <ul class="sns-why-list">
+          <li>リジョブやIndeedには大手サロンの求人が大量にある</li>
+          <li>個人店は知名度がなく、スクロールで飛ばされる</li>
+          <li>「どんな人がやってるサロンか」が見えないと応募が来ない</li>
+          <li>SNSでサロンの雰囲気・人柄が見えれば「ここで働きたい」に変わる</li>
+        </ul>
+      </div>
+
+      <!-- 発信内容 -->
+      <div class="detail-title">Instagramで発信する内容</div>
+
+      <div class="sns-content-grid">
+        <div class="sns-content-card highlight">
+          <span class="card-emoji" role="img" aria-label="camera">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#E1306C"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+          </span>
+          <h5>ビフォーアフター</h5>
+          <p>施術の実力が一目でわかる。集客に直結</p>
         </div>
-        <div class="merit-item">
-          <div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
-          <span>固定給なし（コストゼロの日も可）</span>
+        <div class="sns-content-card">
+          <span class="card-emoji" role="img" aria-label="salon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#1e3a5f"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+          </span>
+          <h5>サロンの雰囲気</h5>
+          <p>内装・空間を見せて安心感を与える</p>
         </div>
-        <div class="merit-item">
-          <div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
-          <span>有給・福利厚生の義務なし</span>
+        <div class="sns-content-card">
+          <span class="card-emoji" role="img" aria-label="person">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#1e3a5f"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </span>
+          <h5>自分の人柄</h5>
+          <p>日常・想いを発信して「この人に会いたい」を作る</p>
         </div>
-        <div class="merit-item">
-          <div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
-          <span>合わなければ契約終了しやすい</span>
+        <div class="sns-content-card">
+          <span class="card-emoji" role="img" aria-label="menu">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#1e3a5f"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          </span>
+          <h5>メニュー紹介</h5>
+          <p>価格・特徴をわかりやすく画像で</p>
+        </div>
+        <div class="sns-content-card">
+          <span class="card-emoji" role="img" aria-label="review">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#1e3a5f"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </span>
+          <h5>お客様の声</h5>
+          <p>口コミ4.78を活かした信頼感の発信</p>
+        </div>
+        <div class="sns-content-card recruit-card">
+          <span class="card-emoji" role="img" aria-label="recruit">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#059669"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </span>
+          <h5>スタッフ募集</h5>
+          <p>サロンの魅力を見せた上で「一緒に働きませんか」</p>
+        </div>
+      </div>
+
+      <!-- 簡単にできるツール -->
+      <div class="tool-box">
+        <h4>投稿画像は専用ツールで簡単に作れます</h4>
+        <p>写真を選んでテキストを入れるだけ。デザインスキルは不要。<br>スマホだけでプロっぽい投稿画像が完成します。</p>
+        <div class="tool-features">
+          <div class="tool-feature"><span>Before / After</span></div>
+          <div class="tool-feature"><span>メニュー紹介</span></div>
+          <div class="tool-feature"><span>スタッフ募集</span></div>
+          <div class="tool-feature"><span>カラー変更OK</span></div>
+        </div>
+      </div>
+
+      <!-- 発信の始め方 -->
+      <div class="detail-title">まずはこの3ステップから</div>
+      <div class="sns-flow">
+        <div class="sns-flow-step">
+          <div class="sns-flow-num">STEP 1</div>
+          <h4>週2回投稿から</h4>
+          <p>完璧じゃなくてOK。まずは写真を撮る習慣をつける</p>
+        </div>
+        <div class="sns-flow-step">
+          <div class="sns-flow-num">STEP 2</div>
+          <h4>ビフォーアフターを軸に</h4>
+          <p>一番反応が取れるのは施術結果。これだけでも集客になる</p>
+        </div>
+        <div class="sns-flow-step">
+          <div class="sns-flow-num">STEP 3</div>
+          <h4>求人投稿を月1回</h4>
+          <p>普段の発信で信頼を作った上で「募集してます」を出す</p>
         </div>
       </div>
     </div>
 
-    <!-- 採用コスト -->
+    <!-- ===== 業務委託の詳細 ===== -->
+    <div class="section-label">HOW - 業務委託の仕組み</div>
+
     <div class="detail-section">
-      <div class="detail-title">採用にかかるコスト</div>
+      <div class="detail-title">業務委託のメリット（正社員との違い）</div>
+      <div class="merit-list">
+        <div class="merit-item"><div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><span>社会保険料の負担なし</span></div>
+        <div class="merit-item"><div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><span>固定給なし（コストゼロの日も可）</span></div>
+        <div class="merit-item"><div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><span>有給・福利厚生の義務なし</span></div>
+        <div class="merit-item"><div class="check-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><span>合わなければ契約終了しやすい</span></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-title">報酬相場と採用コスト</div>
       <div class="detail-grid">
         <div class="detail-card">
-          <div class="card-label">リジョブ（おすすめ）</div>
-          <div class="card-value">1.5〜3万円 <small>/ 180日</small></div>
-          <div class="card-note">美容業界特化の求人サイト</div>
+          <div class="card-label">歩合率の相場</div>
+          <div class="card-value">40〜50%</div>
+          <div class="card-note">フリー客40% / 指名客50%</div>
         </div>
         <div class="detail-card">
-          <div class="card-label">HPBワーク</div>
-          <div class="card-value">約5,000円</div>
-          <div class="card-note">HPB契約者のみ利用可</div>
+          <div class="card-label">委託側の月収目安</div>
+          <div class="card-value">25〜40万円</div>
+          <div class="card-note">求人に載せると応募率UP</div>
+        </div>
+        <div class="detail-card">
+          <div class="card-label">リジョブ掲載</div>
+          <div class="card-value">1.5〜3万円 <small>/ 180日</small></div>
+          <div class="card-note">美容業界特化・おすすめ</div>
         </div>
         <div class="detail-card">
           <div class="card-label">Indeed</div>
           <div class="card-value">無料〜</div>
           <div class="card-note">無料掲載から始められる</div>
         </div>
-        <div class="detail-card">
-          <div class="card-label">人材紹介会社</div>
-          <div class="card-value">年収の35〜50%</div>
-          <div class="card-note">高額のため非推奨</div>
-        </div>
       </div>
     </div>
 
-    <!-- 報酬相場 -->
-    <div class="detail-section">
-      <div class="detail-title">業務委託アイリストの報酬相場</div>
-      <div class="detail-grid">
-        <div class="detail-card">
-          <div class="card-label">歩合率（フリー客）</div>
-          <div class="card-value">40%</div>
-        </div>
-        <div class="detail-card">
-          <div class="card-label">歩合率（指名客）</div>
-          <div class="card-value">50%</div>
-        </div>
-        <div class="detail-card">
-          <div class="card-label">委託側の月収目安</div>
-          <div class="card-value">25〜40万円</div>
-        </div>
-        <div class="detail-card">
-          <div class="card-label">一般的な歩合率</div>
-          <div class="card-value">40〜50%</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-label">Before vs After</div>
+    <!-- ===== Before vs After ===== -->
+    <div class="section-label">RESULT - スタッフ採用後の変化</div>
 
     <div class="comparison">
       <div class="comparison-box before">
         <div class="comparison-deco"></div>
         <div class="label">現在（1人体制）</div>
-        <div class="big-number">月5日</div>
-        <div class="desc">休みは月5日以下。体力的にギリギリ</div>
+        <div class="big-number">月5日休み</div>
+        <div class="desc">休みが少なく体力的にギリギリ</div>
         <div class="desc-steps">
           <span class="step-pill">休めない</span>
           <span class="step-pill">売上の天井</span>
-          <span class="step-pill">体力限界</span>
+          <span class="step-pill">SNSなし</span>
         </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-fill"></div>
-        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
       </div>
-
       <div class="vs-divider">
         <div class="vs-badge">VS</div>
         <div class="speed-badge">+20万/月</div>
       </div>
-
       <div class="comparison-box after">
         <div class="comparison-deco"></div>
-        <div class="label">業務委託導入後</div>
+        <div class="label">SNS + 業務委託 導入後</div>
         <div class="big-number">週休2日</div>
-        <div class="desc">休みを確保しながら売上もプラス</div>
+        <div class="desc">集客も求人もSNSで回る仕組み</div>
         <div class="desc-steps">
           <span class="step-pill">週休2日</span>
           <span class="step-pill">売上UP</span>
           <span class="step-pill">持続可能</span>
         </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-fill"></div>
-        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
       </div>
     </div>
 
-    <!-- シミュレーション -->
     <div class="sim-box">
-      <div class="sim-title">週2日だけ入ってもらった場合のシミュレーション</div>
-      <div class="sim-row">
-        <span class="sim-label">稼働日数</span>
-        <span class="sim-value">月8日</span>
-      </div>
-      <div class="sim-row">
-        <span class="sim-label">1日の施術人数</span>
-        <span class="sim-value">5名</span>
-      </div>
-      <div class="sim-row">
-        <span class="sim-label">客単価</span>
-        <span class="sim-value">9,100円</span>
-      </div>
-      <div class="sim-row">
-        <span class="sim-label">月間売上</span>
-        <span class="sim-value">364,000円</span>
-      </div>
-      <div class="sim-row">
-        <span class="sim-label">スタッフ報酬（歩合45%）</span>
-        <span class="sim-value">-163,800円</span>
-      </div>
-      <div class="sim-row highlight">
-        <span class="sim-label">オーナーの取り分</span>
-        <span class="sim-value">+200,200円/月</span>
-      </div>
+      <div class="sim-title">業務委託スタッフが週2日入った場合</div>
+      <div class="sim-row"><span class="sim-label">稼働日数</span><span class="sim-value">月8日</span></div>
+      <div class="sim-row"><span class="sim-label">1日の施術人数</span><span class="sim-value">5名</span></div>
+      <div class="sim-row"><span class="sim-label">客単価</span><span class="sim-value">9,100円</span></div>
+      <div class="sim-row"><span class="sim-label">月間売上</span><span class="sim-value">364,000円</span></div>
+      <div class="sim-row"><span class="sim-label">スタッフ報酬（歩合45%）</span><span class="sim-value">-163,800円</span></div>
+      <div class="sim-row highlight"><span class="sim-label">オーナーの取り分</span><span class="sim-value">+200,200円/月</span></div>
     </div>
 
     <div class="bottom-cta">
       <div class="cta-deco-1"></div>
       <div class="cta-deco-2"></div>
-      <div class="cta-icon">
-        <svg viewBox="0 0 24 24">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-        </svg>
-      </div>
-      <div class="cta-text">柱1・柱2で売上の土台を固めてから</div>
-      <div class="cta-headline">焦らず、最小リスクで<br>「休めて稼げる」体制を作る</div>
+      <div class="cta-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <div class="cta-text">SNSは集客にも求人にも効く最強の武器</div>
+      <div class="cta-headline">投稿ツールで簡単に始められるから<br>まずは週2回の発信からスタートしよう</div>
     </div>
 
   </div>
 
   <div class="diagram-footer">
     <small>LANIKAI Growth Strategy - Pillar 3</small>
-    <div class="dots">
-      <span></span><span></span><span style="background: #d4af37;"></span>
-    </div>
+    <div class="dots"><span></span><span></span><span style="background: #d4af37;"></span></div>
   </div>
 
 </div>
 
 <script>
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  document.getElementById('toast-text').textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-function setLoading(id, on) {
-  const b = document.getElementById(id);
-  b.classList.toggle('loading', on);
-  b.disabled = on;
-}
-
-async function captureCard() {
-  const el = document.getElementById('capture');
-  return await html2canvas(el, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: '#ffffff',
-    logging: false,
-  });
-}
-
-async function downloadPNG() {
-  setLoading('btn-png', true);
-  try {
-    const canvas = await captureCard();
-    const link = document.createElement('a');
-    link.download = 'lanikai-pillar3-recruitment.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('PNGをダウンロードしました');
-  } catch (e) {
-    console.error(e);
-    showToast('エラーが発生しました');
-  }
-  setLoading('btn-png', false);
-}
-
-async function downloadPDF() {
-  setLoading('btn-pdf', true);
-  try {
-    const canvas = await captureCard();
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdfW = 210;
-    const pdfH = (canvas.height / canvas.width) * pdfW;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [pdfW, pdfH],
-    });
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
-    pdf.save('lanikai-pillar3-recruitment.pdf');
-    showToast('PDFをダウンロードしました');
-  } catch (e) {
-    console.error(e);
-    showToast('エラーが発生しました');
-  }
-  setLoading('btn-pdf', false);
-}
+function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toast-text').textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function setLoading(id, on) { const b = document.getElementById(id); b.classList.toggle('loading', on); b.disabled = on; }
+async function captureCard() { const el = document.getElementById('capture'); return await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false }); }
+async function downloadPNG() { setLoading('btn-png', true); try { const canvas = await captureCard(); const link = document.createElement('a'); link.download = 'lanikai-pillar3.png'; link.href = canvas.toDataURL('image/png'); link.click(); showToast('PNGをダウンロードしました'); } catch (e) { console.error(e); showToast('エラーが発生しました'); } setLoading('btn-png', false); }
+async function downloadPDF() { setLoading('btn-pdf', true); try { const canvas = await captureCard(); const imgData = canvas.toDataURL('image/png'); const { jsPDF } = window.jspdf; const pdfW = 210; const pdfH = (canvas.height / canvas.width) * pdfW; const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] }); pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH); pdf.save('lanikai-pillar3.pdf'); showToast('PDFをダウンロードしました'); } catch (e) { console.error(e); showToast('エラーが発生しました'); } setLoading('btn-pdf', false); }
 </script>
 
 </body>
