@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ムスビヒラサポート 銭丸（ゼニマル）自己紹介図解</title>
+<title>ムスビヒラサポート 銭丸（ゼニマル）自己紹介図解 1/2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -18,8 +18,8 @@
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    padding: 24px 12px 40px;
-    gap: 20px;
+    padding: 24px 12px 48px;
+    gap: 28px;
     overflow-x: hidden;
   }
 
@@ -28,30 +28,34 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
-    padding: 10px 16px;
+    padding: 10px 14px;
     border-radius: 16px;
     max-width: 100%;
   }
 
   .toolbar-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: rgba(255,255,255,0.5);
-    margin-right: 2px;
+    width: 100%;
+    text-align: center;
+  }
+  @media (min-width: 520px) {
+    .toolbar-label { width: auto; text-align: left; }
   }
 
   .btn-download {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
+    gap: 6px;
+    padding: 9px 14px;
     border: none;
     border-radius: 12px;
     font-family: 'Noto Sans JP', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     cursor: pointer;
     transition: transform 0.2s, opacity 0.2s;
@@ -60,13 +64,14 @@
   .btn-download:hover { transform: translateY(-1px); }
   .btn-download:active { transform: translateY(0); }
   .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-download svg { width: 14px; height: 14px; flex-shrink: 0; }
   .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
   .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-pdf-all { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; }
 
   .btn-download .spinner {
     display: none;
-    width: 14px; height: 14px;
+    width: 12px; height: 12px;
     border: 2px solid rgba(255,255,255,0.3);
     border-top-color: #fff;
     border-radius: 50%;
@@ -78,13 +83,13 @@
 
   .toast {
     position: fixed;
-    top: 24px; left: 50%;
+    top: 20px; left: 50%;
     transform: translateX(-50%) translateY(-80px);
     background: #1e1b4b;
     color: #fff;
-    padding: 12px 28px;
+    padding: 10px 22px;
     border-radius: 12px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     border: 1px solid rgba(167,139,250,0.35);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -95,7 +100,7 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast svg {
-    width: 18px; height: 18px;
+    width: 16px; height: 16px;
     fill: none; stroke: #34d399;
     stroke-width: 2.5;
     stroke-linecap: round;
@@ -113,7 +118,7 @@
   .diagram-header {
     background: linear-gradient(135deg, #5b4b8a 0%, #7c5cbf 45%, #c084fc 100%);
     color: #fff;
-    padding: 40px 28px 36px;
+    padding: 32px 24px 28px;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -125,183 +130,238 @@
     pointer-events: none;
   }
   .header-deco-1 {
-    top: -40px; right: -40px;
-    width: 200px; height: 200px;
+    top: -36px; right: -36px;
+    width: 180px; height: 180px;
     background: rgba(255,255,255,0.08);
   }
   .header-deco-2 {
-    bottom: -60px; left: -30px;
-    width: 160px; height: 160px;
+    bottom: -50px; left: -24px;
+    width: 140px; height: 140px;
     background: rgba(255,255,255,0.06);
   }
 
   .header-tag {
     display: inline-block;
     background: rgba(255,255,255,0.2);
-    padding: 6px 18px;
+    padding: 5px 14px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
     position: relative; z-index: 1;
   }
 
   .diagram-header h1 {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 900;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
     position: relative; z-index: 1;
     line-height: 1.35;
   }
 
   .diagram-header .subtitle {
-    font-size: 13px;
-    color: rgba(255,255,255,0.88);
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
     position: relative; z-index: 1;
     line-height: 1.65;
-    max-width: 640px;
+    max-width: 720px;
     margin: 0 auto;
+    text-align: left;
   }
 
-  .diagram-body { padding: 36px 28px 32px; }
+  .diagram-body { padding: 28px 24px 24px; }
 
   .section-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 3px;
+    letter-spacing: 2.5px;
     color: #a78bfa;
+    margin-bottom: 12px;
+    margin-top: 4px;
+  }
+
+  .section-label.first { margin-top: 0; }
+
+  .prose {
+    font-size: 11.5px;
+    color: #4b5563;
+    line-height: 1.75;
+    margin-bottom: 14px;
+  }
+
+  .prose strong { color: #1e1b4b; font-weight: 800; }
+
+  .bullet-box {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .bullet-box ul {
+    margin: 0;
+    padding-left: 1.1em;
+    font-size: 11px;
+    color: #4b5563;
+    line-height: 1.7;
+  }
+
+  .bullet-box li { margin-bottom: 6px; }
+  .bullet-box li:last-child { margin-bottom: 0; }
+
+  .order-banner {
+    background: linear-gradient(90deg, #ede9fe 0%, #e0e7ff 100%);
+    border: 1.5px solid #c4b5fd;
+    border-radius: 14px;
+    padding: 14px 16px;
     margin-bottom: 18px;
-  }
-
-  .flow {
-    display: flex;
-    align-items: stretch;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 8px;
-    gap: 0;
-  }
-
-  .flow-step {
-    flex: 1;
-    min-width: 200px;
     text-align: center;
-    padding: 22px 12px;
-    border-radius: 18px;
+  }
+
+  .order-banner .lead {
+    font-size: 13px;
+    font-weight: 900;
+    color: #5b21b6;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .order-banner .sub {
+    font-size: 10.5px;
+    color: #6b7280;
+    line-height: 1.65;
+  }
+
+  .flow-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 800px) {
+    .flow-4 { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 420px) {
+    .flow-4 { grid-template-columns: 1fr; }
+  }
+
+  .mini-step {
+    border-radius: 14px;
+    padding: 12px 10px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
     position: relative;
   }
 
-  .flow-step .step-number {
+  .mini-step .num {
     position: absolute;
-    top: 8px; left: 10px;
+    top: 6px; left: 8px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #9ca3af;
+  }
+
+  .mini-step h4 {
     font-size: 11px;
     font-weight: 800;
-    color: #d1d5db;
-  }
-
-  .flow-step .icon-wrap {
-    width: 72px; height: 72px;
-    border-radius: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 14px;
-  }
-  .flow-step .icon-wrap svg { width: 36px; height: 36px; max-width: 100%; height: auto; }
-
-  .icon-red { background: #fee2e2; }
-  .icon-red svg { fill: #dc2626; }
-  .icon-amber { background: #fef3c7; }
-  .icon-amber svg { fill: #d97706; }
-  .icon-green { background: #d1fae5; }
-  .icon-green svg { fill: #059669; }
-
-  .flow-step h3 {
-    font-size: 15px;
-    font-weight: 800;
     color: #1e1b4b;
-    margin-bottom: 8px;
-    line-height: 1.4;
+    margin: 14px 0 6px;
+    line-height: 1.35;
   }
 
-  .flow-step p {
-    font-size: 12px;
+  .mini-step p {
+    font-size: 9.5px;
     color: #6b7280;
-    line-height: 1.65;
+    line-height: 1.55;
     text-align: left;
   }
+
+  .ms-red { background: #fef2f2; border-color: #fecaca; }
+  .ms-violet { background: #f5f3ff; border-color: #ddd6fe; }
+  .ms-amber { background: #fffbeb; border-color: #fde68a; }
+  .ms-green { background: #ecfdf5; border-color: #a7f3d0; }
 
   .kw-red { color: #dc2626; font-weight: 700; }
   .kw-amber { color: #d97706; font-weight: 700; }
   .kw-green { color: #059669; font-weight: 700; }
-
-  .flow-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    flex-shrink: 0;
-  }
-  .flow-arrow .arrow-icon {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .flow-arrow .arrow-icon svg {
-    width: 16px; height: 16px;
-    fill: none; stroke: #fff;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+  .kw-violet { color: #6d28d9; font-weight: 700; }
 
   .connector {
     text-align: center;
-    padding: 14px 0 28px;
+    padding: 10px 0 18px;
     position: relative;
   }
+
   .connector-line-top,
   .connector-line-bottom {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     width: 2px;
-    height: 12px;
+    height: 10px;
     background: #a78bfa;
   }
   .connector-line-top { top: 0; }
-  .connector-line-bottom { bottom: 2px; }
+  .connector-line-bottom { bottom: 0; }
 
   .connector .connector-badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: #f5f3ff;
     border: 1.5px solid #ddd6fe;
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 11px;
     font-weight: 700;
     color: #6d28d9;
   }
-  .connector .connector-badge svg {
-    width: 16px; height: 16px;
-    fill: none; stroke: #7c3aed;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+
+  .bottom-cta {
+    margin-top: 8px;
+    text-align: center;
+    padding: 22px 18px;
+    background: #1e1b4b;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-deco-1 {
+    position: absolute;
+    top: -24px; right: -24px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(167,139,250,0.12);
+    pointer-events: none;
+  }
+
+  .bottom-cta .cta-text {
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 6px;
+    position: relative; z-index: 1;
+    line-height: 1.6;
+  }
+
+  .bottom-cta .cta-headline {
+    font-size: 15px;
+    font-weight: 900;
+    color: #c4b5fd;
+    line-height: 1.5;
+    position: relative; z-index: 1;
   }
 
   .comparison {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     align-items: stretch;
     flex-wrap: wrap;
     justify-content: center;
@@ -309,10 +369,9 @@
 
   .comparison-box {
     flex: 1;
-    min-width: 240px;
-    border-radius: 20px;
-    padding: 26px 18px;
-    text-align: center;
+    min-width: 200px;
+    border-radius: 16px;
+    padding: 18px 14px;
     position: relative;
     overflow: hidden;
   }
@@ -328,8 +387,8 @@
 
   .comparison-deco {
     position: absolute;
-    top: -20px; right: -20px;
-    width: 80px; height: 80px;
+    top: -16px; right: -16px;
+    width: 64px; height: 64px;
     border-radius: 50%;
     pointer-events: none;
   }
@@ -337,63 +396,61 @@
   .after .comparison-deco { background: rgba(16,185,129,0.08); }
 
   .comparison-box .label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
     position: relative; z-index: 1;
   }
   .comparison-box.before .label { color: #ef4444; }
   .comparison-box.after .label { color: #059669; }
 
-  .comparison-box .big-number {
-    font-size: 40px;
+  .comparison-box .big-title {
+    font-size: 15px;
     font-weight: 900;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     position: relative; z-index: 1;
-    line-height: 1.15;
+    line-height: 1.25;
   }
-  .comparison-box.before .big-number { color: #dc2626; font-size: 28px; }
-  .comparison-box.after .big-number { color: #059669; font-size: 28px; }
+  .comparison-box.before .big-title { color: #b91c1c; }
+  .comparison-box.after .big-title { color: #047857; }
 
   .comparison-box .desc {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: 10.5px;
+    color: #4b5563;
     position: relative; z-index: 1;
-    margin-bottom: 10px;
-    line-height: 1.55;
+    line-height: 1.65;
+    text-align: left;
   }
 
   .desc-steps {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
+    gap: 5px;
+    margin-top: 10px;
     position: relative; z-index: 1;
-    margin-bottom: 14px;
   }
 
   .step-pill {
-    font-size: 10px;
-    padding: 4px 10px;
-    border-radius: 10px;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 8px;
     font-weight: 600;
   }
-  .before .step-pill { background: rgba(239,68,68,0.15); color: #dc2626; }
-  .after .step-pill { background: rgba(16,185,129,0.15); color: #059669; }
+  .before .step-pill { background: rgba(239,68,68,0.15); color: #b91c1c; }
+  .after .step-pill { background: rgba(16,185,129,0.2); color: #047857; }
 
   .progress-bar-wrap {
-    position: relative; z-index: 1;
-    height: 8px;
+    margin-top: 12px;
+    height: 6px;
     background: rgba(0,0,0,0.08);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
-    margin: 0 8px;
+    position: relative; z-index: 1;
   }
-  .progress-bar-fill { height: 100%; border-radius: 4px; }
-  .before .progress-bar-fill { width: 32%; background: #ef4444; }
-  .after .progress-bar-fill { width: 88%; background: #10b981; }
+  .progress-bar-fill { height: 100%; border-radius: 3px; }
+  .before .progress-bar-fill { width: 35%; background: #ef4444; }
+  .after .progress-bar-fill { width: 90%; background: #10b981; }
 
   .vs-divider {
     display: flex;
@@ -401,130 +458,101 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     order: 2;
   }
-  @media (min-width: 700px) {
+  @media (min-width: 640px) {
     .vs-divider { width: auto; order: 0; }
   }
 
   .vs-badge {
-    width: 44px; height: 44px;
+    width: 36px; height: 36px;
     border-radius: 50%;
     background: #1e1b4b;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 900;
-    letter-spacing: 1px;
   }
 
   .speed-badge {
     background: #7c3aed;
     color: #fff;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
-    padding: 4px 12px;
-    border-radius: 12px;
+    padding: 3px 10px;
+    border-radius: 10px;
     white-space: nowrap;
   }
 
-  .bottom-cta {
-    margin-top: 28px;
-    text-align: center;
-    padding: 28px 20px;
-    background: #1e1b4b;
-    border-radius: 20px;
-    position: relative;
-    overflow: hidden;
+  .program-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
   }
 
-  .cta-deco-1 {
-    position: absolute;
-    top: -30px; right: -30px;
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    background: rgba(167,139,250,0.12);
-    pointer-events: none;
-  }
-  .cta-deco-2 {
-    position: absolute;
-    bottom: -40px; left: -20px;
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    background: rgba(240,147,251,0.08);
-    pointer-events: none;
+  @media (max-width: 640px) {
+    .program-grid { grid-template-columns: 1fr; }
   }
 
-  .bottom-cta .cta-icon {
-    width: 44px; height: 44px;
-    margin: 0 auto 12px;
-    background: rgba(255,255,255,0.1);
+  .program-card {
+    border: 1px solid #e5e7eb;
     border-radius: 14px;
+    padding: 14px;
+    background: #fafafa;
+  }
+
+  .program-card h4 {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1e1b4b;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    justify-content: center;
-  }
-  .bottom-cta .cta-icon svg {
-    width: 24px; height: 24px;
-    fill: none; stroke: #a78bfa;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    gap: 6px;
   }
 
-  .bottom-cta .cta-text {
-    font-size: 12px;
-    color: rgba(255,255,255,0.62);
-    margin-bottom: 8px;
-    position: relative; z-index: 1;
+  .program-card p {
+    font-size: 10.5px;
+    color: #4b5563;
+    line-height: 1.65;
   }
 
-  .bottom-cta .cta-headline {
-    font-size: 18px;
-    font-weight: 900;
-    color: #c4b5fd;
+  .program-card .note {
+    margin-top: 8px;
+    font-size: 9.5px;
+    color: #6b7280;
     line-height: 1.55;
-    position: relative; z-index: 1;
   }
 
   .diagram-footer {
-    padding: 14px 28px;
+    padding: 12px 24px;
     border-top: 1px solid #f3f4f6;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
-  .diagram-footer small { font-size: 10px; color: #9ca3af; }
-  .diagram-footer .dots { display: flex; gap: 4px; }
-  .diagram-footer .dots span {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #e5e7eb;
+
+  .diagram-footer small { font-size: 9px; color: #9ca3af; }
+  .page-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: #7c3aed;
+    background: #f5f3ff;
+    padding: 4px 10px;
+    border-radius: 8px;
   }
-  .diagram-footer .dots span:first-child { background: #a78bfa; }
 
   @media (max-width: 600px) {
-    .diagram-header h1 { font-size: 1.35rem; }
-    .diagram-header .subtitle { font-size: 0.8rem; }
-    .flow-arrow { display: none; }
-    .flow-step p { font-size: 0.82rem; }
+    .diagram-header h1 { font-size: 1.15rem; }
+    .diagram-header .subtitle { font-size: 0.72rem; }
     .comparison { flex-direction: column; }
-    .bottom-cta .cta-headline { font-size: 1rem; }
-  }
-
-  @media (max-width: 900px) {
-    .flow { flex-direction: column; }
-    .flow-arrow {
-      transform: rotate(90deg);
-      width: 100%;
-      height: 32px;
-    }
   }
 </style>
 </head>
@@ -536,170 +564,200 @@
 </div>
 
 <div class="toolbar" id="toolbar">
-  <span class="toolbar-label">ダウンロード:</span>
-  <button class="btn-download btn-png" type="button" onclick="downloadPNG()" id="btn-png">
+  <span class="toolbar-label">ダウンロード</span>
+  <button class="btn-download btn-png" type="button" onclick="downloadPNG(1)" id="btn-png1">
     <span class="spinner"></span>
-    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <path d="m21 15-5-5L5 21"/>
-    </svg>
-    <span class="btn-text">PNG</span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    <span class="btn-text">PNG 1枚目</span>
   </button>
-  <button class="btn-download btn-pdf" type="button" onclick="downloadPDF()" id="btn-pdf">
+  <button class="btn-download btn-png" type="button" onclick="downloadPNG(2)" id="btn-png2">
     <span class="spinner"></span>
-    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <path d="M14 2v6h6"/>
-      <path d="M12 18v-6"/>
-      <path d="m9 15 3 3 3-3"/>
-    </svg>
-    <span class="btn-text">PDF</span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    <span class="btn-text">PNG 2枚目</span>
+  </button>
+  <button class="btn-download btn-pdf-all" type="button" onclick="downloadPDFBoth()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+    <span class="btn-text">PDF（2ページ）</span>
   </button>
 </div>
 
-<div class="diagram-card" id="capture">
+<!-- ========== 1枚目 ========== -->
+<div class="diagram-card" id="capture-page1">
 
   <div class="diagram-header">
     <div class="deco-circle header-deco-1"></div>
     <div class="deco-circle header-deco-2"></div>
-    <div class="header-tag">Musubihira Support</div>
+    <div class="header-tag">Musubihira Support · Page 1</div>
     <h1>ムスビヒラサポート／銭丸（ゼニマル）</h1>
-    <p class="subtitle">美容室専門の組織化コンサル。離職を減らす「表の入口」であり、本丸はスタッフが「この会社が好き」と思える状態づくり。<span class="kw-amber" style="color:#fde68a;font-weight:700;">拓く前に、まず結ぶ。</span></p>
+    <p class="subtitle">美容室に特化した組織化コンサルです。入口としては「離職を減らす」ですが、本丸はスタッフが「この会社が好き」「このサロンが好き」と思える職場に近づけること。求人や定着にも効いてきます。<strong style="color:#fef08a;">拓く（育成・展開）の前に、まず結ぶ（関係の土台）。</strong>そのうえで、現場に届く順番を一緒に組み立てていきます。</p>
   </div>
 
   <div class="diagram-body">
 
-    <div class="section-label">Problem → Approach</div>
+    <div class="section-label first">Context</div>
+    <p class="prose">現場では「教えても伝わらない」「言った通りに動かない」「店長が疲れ切っている」といった声がよく出ます。原因を単純化すると、スキル不足だけではなく、<strong>人と人との距離・空気・信頼</strong>が先に崩れているケースが少なくありません。</p>
 
-    <div class="flow">
-      <div class="flow-step">
-        <span class="step-number">01</span>
-        <div class="icon-wrap icon-red">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.48 0-2.75.81-3.45 2H8.45C7.75 5.81 6.48 5 5 5 3.34 5 2 6.34 2 8s1.34 3 3 3h8c.55 0 1-.45 1-1v-1h2v1c0 1.66-1.34 3-3 3H8v2h5c2.76 0 5-2.24 5-5 0-1.85-1-3.45-2.5-4.32zM5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>
-        </div>
-        <h3>なぜ辞める？</h3>
-        <p>美容室で人が辞める背景には、<span class="kw-red">人間関係</span>が多い。スキルやノウハウを詰め込んでも、関係が希薄だと<span class="kw-red">言葉は届かない</span>。</p>
+    <div class="bullet-box">
+      <ul>
+        <li>美容室で人が辞める背景には、<span class="kw-red">人間関係</span>が絡むことが多い</li>
+        <li>ノウハウやマニュアルを増やしても、<span class="kw-red">関係が希薄だと言葉は届きにくい</span></li>
+        <li>「能力を育てよう」と走り出す前に、<span class="kw-amber">相手と自分の土台</span>を整えたい</li>
+      </ul>
+    </div>
+
+    <div class="section-label">順番の設計（いちばん大事なところ）</div>
+
+    <div class="order-banner">
+      <p class="lead">やり方・在り方の話の前に、<br>まず最初に「自分を整える」</p>
+      <p class="sub">勉強会の中身も、この順番を意識しています。いきなりテクニックや理想の在り方を詰め込むのではなく、<strong>上司・幹部自身の心の余裕、疲れ方、関わり方のクセ</strong>から見直すところから入ります。自分の状態が落ち着いて初めて、チームへの言葉の出方や「どう在るか」が変わっていきます。</p>
+    </div>
+
+    <div class="flow-4">
+      <div class="mini-step ms-red">
+        <span class="num">01</span>
+        <h4>痛みの共有</h4>
+        <p>離職・モヤモヤ・<span class="kw-red">育成疲れ</span>。数字と現場の声で、いま何が起きているかを揃える。</p>
       </div>
-
-      <div class="flow-arrow">
-        <div class="arrow-icon">
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
+      <div class="mini-step ms-violet">
+        <span class="num">02</span>
+        <h4>自分を整える</h4>
+        <p><span class="kw-violet">最優先の入口</span>。責めずに、自分の在り方・余白・関わり方から整える。ここを飛ばすと、どのノウハウも薄い。</p>
       </div>
-
-      <div class="flow-step">
-        <span class="step-number">02</span>
-        <div class="icon-wrap icon-amber">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-        </div>
-        <h3>先にやること</h3>
-        <p>多くの会社は<span class="kw-amber">能力を育てよう</span>としがち。でも銭丸は、まず<span class="kw-amber">関係性を結ぶ</span>。信頼の土台がないと、どんな育成も響きにくい。</p>
+      <div class="mini-step ms-amber">
+        <span class="num">03</span>
+        <h4>関係を結ぶ</h4>
+        <p><span class="kw-amber">拓く前に結ぶ</span>。信頼と安心の土台。関係がないと、正論も刺さらない。</p>
       </div>
-
-      <div class="flow-arrow">
-        <div class="arrow-icon">
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </div>
-
-      <div class="flow-step">
-        <span class="step-number">03</span>
-        <div class="icon-wrap icon-green">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
-        </div>
-        <h3>具体的な伴走</h3>
-        <p><span class="kw-green">スタッフアンケート</span>で現状を可視化（導入期は年2回サイクルなど）。<span class="kw-green">月1回の勉強会</span>で上司の心構え・在り方を伝え、宿題レポートにフィードバック。内容の多くは<span class="kw-green">やり方より在り方</span>。</p>
+      <div class="mini-step ms-green">
+        <span class="num">04</span>
+        <h4>やり方・在り方</h4>
+        <p>その上で<span class="kw-green">技術・運営・マネジメントの話</span>が乗る。順番を守ると、現場に届きやすくなる。</p>
       </div>
     </div>
 
     <div class="connector">
       <div class="connector-line-top"></div>
-      <div class="connector-badge">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-        一般論との違いは？
-      </div>
+      <div class="connector-badge">銭丸のスタンス</div>
       <div class="connector-line-bottom"></div>
     </div>
 
-    <div class="section-label">Before vs After</div>
-
-    <div class="comparison">
-      <div class="comparison-box before">
-        <div class="comparison-deco"></div>
-        <div class="label">よくある流れ</div>
-        <div class="big-number">スキル先行</div>
-        <div class="desc">店長に「こうあらねば」と詰め込み、店長が疲弊し、現場に届かない。</div>
-        <div class="desc-steps">
-          <span class="step-pill">ノウハウ重視</span>
-          <span class="step-pill">届かない</span>
-          <span class="step-pill">育成疲れ</span>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-fill"></div>
-        </div>
-      </div>
-
-      <div class="vs-divider">
-        <div class="vs-badge">VS</div>
-        <div class="speed-badge">関係性から</div>
-      </div>
-
-      <div class="comparison-box after">
-        <div class="comparison-deco"></div>
-        <div class="label">ムスビヒラの流れ</div>
-        <div class="big-number">まず結ぶ</div>
-        <div class="desc">上（経営・店長）の在り方から。余裕と関わり方の変化が、店の空気と定着に効く。</div>
-        <div class="desc-steps">
-          <span class="step-pill">アンケート</span>
-          <span class="step-pill">勉強会</span>
-          <span class="step-pill">宿題＆FB</span>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-fill"></div>
-        </div>
-      </div>
-    </div>
+    <p class="prose" style="margin-bottom:0;">人を変えることはできない。変えられるのは<strong>自分の関わり方</strong>だけ、という前提で伴走します。押し付けではなく提案。できていないことより、できていることから言語化していく。初回も10回目も、接し方は変えません（関西弁ミックスの丁寧語）。</p>
 
     <div class="bottom-cta">
       <div class="cta-deco-1"></div>
-      <div class="cta-deco-2"></div>
-      <div class="cta-icon">
-        <svg viewBox="0 0 24 24">
-          <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
-        </svg>
-      </div>
-      <div class="cta-text">幹部育成 ＝ 組織の成長。上が率先して学ばないと、下も育ちにくい。</div>
-      <div class="cta-headline">組織は、人が育った分しか育たない。</div>
+      <div class="cta-text">経営者・オーナー自身が学ぶ姿勢がないと、現場は長くは変わりにくい——という前提です。</div>
+      <div class="cta-headline">上が変われば、下が変わる。下が変われば、店が変わる。</div>
     </div>
 
   </div>
 
   <div class="diagram-footer">
     <small>ムスビヒラサポート・銭丸（ゼニマル）／美容室組織化コンサル</small>
-    <div class="dots">
-      <span></span><span></span><span></span>
-    </div>
+    <span class="page-num">1 / 2</span>
+  </div>
+</div>
+
+<!-- ========== 2枚目 ========== -->
+<div class="diagram-card" id="capture-page2">
+
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="header-tag">Musubihira Support · Page 2</div>
+    <h1>伴走の具体的な形</h1>
+    <p class="subtitle">アンケートで現状を可視化し、定期的な勉強会で「自分を整える → 関係を結ぶ → やり方・在り方」の流れを繰り返し体に入れていきます。宿題（実践レポート）とフィードバックで、セミナーが現場で終わらないようにしています。</p>
   </div>
 
+  <div class="diagram-body">
+
+    <div class="section-label first">Program</div>
+
+    <div class="program-grid">
+      <div class="program-card">
+        <h4>スタッフアンケート</h4>
+        <p>社内の温度感・期待・満足度など、<strong>現状確認のためのアンケート</strong>を取っていただきます。導入の仕組みでは<strong>年2回</strong>のサイクルになりやすく、フェーズによっては<strong>年1回</strong>に寄せる形もあります。</p>
+        <p class="note">結果は報告会でオーナー様にお渡しし、次の半年のテーマにつなげます。</p>
+      </div>
+      <div class="program-card">
+        <h4>勉強会（半年で4回＝月1ペース目安）</h4>
+        <p>店長・幹部を交えたセミナー形式。内容は<strong>いきなりノウハウ偏重にしない</strong>設計で、まず<strong>自分を整える</strong>視点（心の持ち方・疲れ方・関わり方）から入り、そのうえで上司としての心構え、チームとの関係づくり、必要に応じてやり方・在り方のテーマへ展開します。</p>
+        <p class="note">「育成疲れ」から動けるように、負担のかけ方自体も一緒に見ます。</p>
+      </div>
+    </div>
+
+    <div class="program-card" style="margin-bottom:16px;background:#fff;border-color:#ddd6fe;">
+      <h4>宿題（実践レポート）とフィードバック</h4>
+      <p>毎回、現場に戻っていただくための宿題を出します。銭丸が<strong>レポートに返信</strong>し、次回は共有・発表の時間も取ります。頭で理解しただけで終わらせず、<strong>行動と言葉のクセ</strong>が少しずつ変わることを目的にしています。</p>
+    </div>
+
+    <div class="section-label">一般のコンサルとの違い（イメージ）</div>
+
+    <div class="comparison">
+      <div class="comparison-box before">
+        <div class="comparison-deco"></div>
+        <div class="label">よくあるパターン</div>
+        <div class="big-title">テクニック・理想先行</div>
+        <div class="desc">店長に「こうあらねば」「こう動け」と詰め込みがち。店長は頑張るが心がすり減り、スタッフには届かない。正論が増えるほど空気が硬くなることも。</div>
+        <div class="desc-steps">
+          <span class="step-pill">ノウハウ優先</span>
+          <span class="step-pill">自分を後回し</span>
+          <span class="step-pill">育成疲れ</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
+      </div>
+
+      <div class="vs-divider">
+        <div class="vs-badge">VS</div>
+        <div class="speed-badge">順番から</div>
+      </div>
+
+      <div class="comparison-box after">
+        <div class="comparison-deco"></div>
+        <div class="label">ムスビヒラのパターン</div>
+        <div class="big-title">整える → 結ぶ → 育てる</div>
+        <div class="desc">まず<strong>自分を整える</strong>。次に<strong>関係を結ぶ</strong>。そのうえでやり方・在り方。上（経営・店長）の余裕と関わり方の変化が、店の空気・定着・求人の質に波及します。</div>
+        <div class="desc-steps">
+          <span class="step-pill">アンケート</span>
+          <span class="step-pill">勉強会</span>
+          <span class="step-pill">宿題＆FB</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="bottom-cta" style="margin-top:18px;">
+      <div class="cta-deco-1"></div>
+      <div class="cta-text">幹部育成は組織の成長とイコール。上が率先して学ばない職場では、下も育ちにくい。</div>
+      <div class="cta-headline">組織は、人が育った分しか育たない。</div>
+    </div>
+
+    <p class="prose" style="margin-top:14px;margin-bottom:0;font-size:10px;color:#6b7280;">※実績の一例：毎月2〜3名が辞めていた規模のサロンが、セミナー開始後の半年で離職が大きく減ったケースなど（個別条件により結果は異なります）。</p>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>ムスビヒラサポート・銭丸（ゼニマル）／美容室組織化コンサル</small>
+    <span class="page-num">2 / 2</span>
+  </div>
 </div>
 
 <script>
 function showToast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   document.getElementById('toast-text').textContent = msg;
   t.classList.add('show');
   setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
 function setLoading(id, on) {
-  const b = document.getElementById(id);
+  var b = document.getElementById(id);
   b.classList.toggle('loading', on);
   b.disabled = on;
 }
 
-async function captureCard() {
-  const el = document.getElementById('capture');
+async function captureEl(id) {
+  var el = document.getElementById(id);
   return await html2canvas(el, {
     scale: 2,
     useCORS: true,
@@ -708,38 +766,41 @@ async function captureCard() {
   });
 }
 
-async function downloadPNG() {
-  setLoading('btn-png', true);
+async function downloadPNG(page) {
+  var btnId = page === 1 ? 'btn-png1' : 'btn-png2';
+  var capId = page === 1 ? 'capture-page1' : 'capture-page2';
+  setLoading(btnId, true);
   try {
-    const canvas = await captureCard();
-    const link = document.createElement('a');
-    link.download = 'musubihira-zeni-intro.png';
+    var canvas = await captureEl(capId);
+    var link = document.createElement('a');
+    link.download = 'musubihira-zeni-intro-p' + page + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
-    showToast('PNGをダウンロードしました');
+    showToast('PNG（' + page + '枚目）をダウンロードしました');
   } catch (e) {
     console.error(e);
     showToast('エラーが発生しました');
   }
-  setLoading('btn-png', false);
+  setLoading(btnId, false);
 }
 
-async function downloadPDF() {
+async function downloadPDFBoth() {
   setLoading('btn-pdf', true);
   try {
-    const canvas = await captureCard();
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdfW = 210;
-    const pdfH = (canvas.height / canvas.width) * pdfW;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [pdfW, pdfH],
-    });
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
-    pdf.save('musubihira-zeni-intro.pdf');
-    showToast('PDFをダウンロードしました');
+    var c1 = await captureEl('capture-page1');
+    var c2 = await captureEl('capture-page2');
+    var img1 = c1.toDataURL('image/png');
+    var img2 = c2.toDataURL('image/png');
+    var jsPDF = window.jspdf.jsPDF;
+    var pdfW = 210;
+    var h1 = (c1.height / c1.width) * pdfW;
+    var h2 = (c2.height / c2.width) * pdfW;
+    var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, h1] });
+    pdf.addImage(img1, 'PNG', 0, 0, pdfW, h1);
+    pdf.addPage([pdfW, h2], 'p');
+    pdf.addImage(img2, 'PNG', 0, 0, pdfW, h2);
+    pdf.save('musubihira-zeni-intro-2pages.pdf');
+    showToast('PDF（2ページ）をダウンロードしました');
   } catch (e) {
     console.error(e);
     showToast('エラーが発生しました');
