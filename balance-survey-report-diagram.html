@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バランス様 スタッフアンケート第2回 図解サマリー</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0c1222;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 10px 40px;
+    gap: 24px;
+    overflow-x: hidden;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    max-width: 100%;
+  }
+  .toolbar span { font-size: 11px; color: rgba(255,255,255,0.5); width: 100%; text-align: center; }
+  @media (min-width: 480px) { .toolbar span { width: auto; } }
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    color: #fff;
+  }
+  .btn-png { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .btn-pdf { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn .spinner {
+    display: none;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: sp 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .btn.loading .spinner { display: inline-block; }
+  .btn.loading .bi { display: none; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .toast {
+    position: fixed;
+    top: 16px; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #1e293b;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid rgba(94,234,212,0.3);
+    z-index: 200;
+    transition: transform 0.35s ease;
+  }
+  .toast.on { transform: translateX(-50%) translateY(0); }
+
+  .card {
+    width: 900px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .head {
+    background: linear-gradient(135deg, #0f766e 0%, #0e7490 50%, #0369a1 100%);
+    color: #fff;
+    padding: 28px 24px 26px;
+    text-align: center;
+    position: relative;
+  }
+  .head .deco {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    background: rgba(255,255,255,0.07);
+  }
+  .head .d1 { width: 160px; height: 160px; top: -50px; right: -40px; }
+  .head .d2 { width: 120px; height: 120px; bottom: -40px; left: -20px; }
+  .head .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    background: rgba(255,255,255,0.2);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .head h1 {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .head .sub {
+    font-size: 12px;
+    opacity: 0.92;
+    line-height: 1.55;
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .body { padding: 22px 22px 20px; }
+  .sec-title {
+    font-size: 11px;
+    font-weight: 900;
+    color: #0f766e;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #ccfbf1;
+  }
+  .sec-title.mt { margin-top: 18px; }
+
+  .chart-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .chart-row .name {
+    width: 118px;
+    flex-shrink: 0;
+    font-weight: 800;
+    color: #334155;
+    line-height: 1.25;
+  }
+  .chart-row .track {
+    flex: 1;
+    height: 22px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+  }
+  .chart-row .fill {
+    height: 100%;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 10px;
+    font-weight: 900;
+    color: #fff;
+    min-width: 36px;
+  }
+  .fill.a { background: linear-gradient(90deg, #059669, #10b981); }
+  .fill.b { background: linear-gradient(90deg, #0284c7, #0ea5e9); }
+  .fill.c { background: linear-gradient(90deg, #d97706, #f59e0b); }
+  .fill.d { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+
+  .rank-pill {
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 900;
+    color: #64748b;
+  }
+
+  .prio-ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .prio-item {
+    display: flex;
+    align-items: stretch;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+  }
+  .prio-item .lv {
+    width: 72px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    color: #fff;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    letter-spacing: 0.1em;
+    padding: 8px 0;
+  }
+  .prio-item .lv.p1 { background: #b91c1c; }
+  .prio-item .lv.p2 { background: #c2410c; }
+  .prio-item .lv.p3 { background: #ca8a04; }
+  .prio-item .lv.p4 { background: #64748b; }
+  .prio-item .txt {
+    padding: 10px 12px;
+    background: #fafafa;
+    flex: 1;
+  }
+  .prio-item .txt strong {
+    display: block;
+    font-size: 13px;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+  .prio-item .txt span { font-size: 10.5px; color: #475569; line-height: 1.45; font-weight: 600; }
+
+  .themes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 720px) {
+    .themes { grid-template-columns: repeat(2, 1fr); }
+  }
+  .theme-cell {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #334155;
+    line-height: 1.35;
+  }
+  .theme-cell .code { font-size: 14px; font-weight: 900; color: #0f766e; margin-bottom: 4px; }
+
+  .foot {
+    padding: 12px 22px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9px;
+    color: #94a3b8;
+  }
+  .pg {
+    font-weight: 900;
+    color: #0f766e;
+    background: #ecfdf5;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+  }
+
+  /* page 2 */
+  .alert-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 640px) {
+    .alert-grid { grid-template-columns: 1fr; }
+  }
+  .alert-box {
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    border: 2px solid #fecaca;
+    background: #fef2f2;
+  }
+  .alert-box .big {
+    font-size: 22px;
+    font-weight: 900;
+    color: #b91c1c;
+    line-height: 1.2;
+  }
+  .alert-box .lbl { font-size: 10px; font-weight: 800; color: #991b1b; margin-top: 6px; }
+  .alert-box .note { font-size: 9.5px; color: #7f1d1d; margin-top: 4px; font-weight: 600; line-height: 1.4; }
+
+  .flow-h {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 12px;
+    background: #f0fdfa;
+    border-radius: 12px;
+    border: 1px solid #99f6e4;
+  }
+  .flow-h .node {
+    font-size: 10px;
+    font-weight: 800;
+    color: #134e4a;
+    background: #fff;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #5eead4;
+  }
+  .flow-h .arr { font-size: 14px; color: #0d9488; font-weight: 900; }
+
+  .act-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 560px) { .act-grid { grid-template-columns: 1fr; } }
+  .act {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 10px;
+  }
+  .act .n { font-size: 18px; font-weight: 900; color: #b45309; float: left; margin-right: 8px; line-height: 1; }
+  .act p { font-size: 10px; font-weight: 700; color: #78350f; line-height: 1.45; padding-left: 26px; }
+  .act p em { font-style: normal; color: #92400e; font-size: 9px; display: block; margin-top: 4px; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 560px) { .two-col { grid-template-columns: 1fr; } }
+  .box-mini {
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: #334155;
+  }
+  .box-mini h4 { font-size: 12px; margin-bottom: 6px; color: #0f172a; }
+  .box-mini.honten { background: #eff6ff; border: 1px solid #bfdbfe; }
+  .box-mini.noda { background: #faf5ff; border: 1px solid #e9d5ff; }
+
+  .timeline {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    font-size: 10px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-row .when {
+    background: #f8fafc;
+    font-weight: 900;
+    color: #0f766e;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+  }
+  .tl-row .what {
+    padding: 10px;
+    font-weight: 600;
+    color: #475569;
+    line-height: 1.45;
+  }
+
+  .msg {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .msg strong { color: #5eead4; }
+
+  .meet-flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .meet-flow .m {
+    font-size: 9px;
+    font-weight: 800;
+    background: #f1f5f9;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+  .meet-flow .m b { color: #0f766e; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="toolbar">
+  <span>ダウンロード</span>
+  <button class="btn btn-png" type="button" id="b1" onclick="png(1)"><span class="spinner"></span><span class="bi">PNG 1枚目</span></button>
+  <button class="btn btn-png" type="button" id="b2" onclick="png(2)"><span class="spinner"></span><span class="bi">PNG 2枚目</span></button>
+  <button class="btn btn-pdf" type="button" id="bp" onclick="pdfBoth()"><span class="spinner"></span><span class="bi">PDF（2ページ）</span></button>
+</div>
+
+<div class="card" id="capture-page1">
+  <div class="head">
+    <div class="deco d1"></div>
+    <div class="deco d2"></div>
+    <div class="tag">BALANCE · STAFF SURVEY ROUND 2</div>
+    <h1>スタッフアンケート 第2回<br>図解サマリー</h1>
+    <p class="sub">調査期間 2026年3月7日～17日 ／ 5店舗 ／ 回答39名<br>期待と満足のギャップを可視化。責任追及ではなく、次の一手の材料。</p>
+  </div>
+  <div class="body">
+    <div class="sec-title">全店舗・総合スコア（高いほど職場体験が良好）</div>
+    <div class="chart-row">
+      <span class="name">ハレまち店</span>
+      <div class="track"><div class="fill a" style="width:100%">66.6</div></div>
+      <span class="rank-pill">A</span>
+    </div>
+    <div class="chart-row">
+      <span class="name">玉島店</span>
+      <div class="track"><div class="fill b" style="width:77.8%">51.8</div></div>
+      <span class="rank-pill">B</span>
+    </div>
+    <div class="chart-row">
+      <span class="name">野田店</span>
+      <div class="track"><div class="fill b" style="width:77.8%">51.8</div></div>
+      <span class="rank-pill">B</span>
+    </div>
+    <div class="chart-row">
+      <span class="name">本店</span>
+      <div class="track"><div class="fill c" style="width:63.7%">42.4</div></div>
+      <span class="rank-pill">C</span>
+    </div>
+    <div class="chart-row">
+      <span class="name">エスパーク店</span>
+      <div class="track"><div class="fill d" style="width:56.0%">37.3</div></div>
+      <span class="rank-pill">D</span>
+    </div>
+    <p style="font-size:9px;color:#64748b;margin-top:8px;font-weight:600;">※棒の長さはハレまち店（66.6）を100%とした相対表示。赤セル数：エスパーク21・他店最大7前後。</p>
+
+    <div class="sec-title mt">提言：リソース配分の優先順位</div>
+    <div class="prio-ladder">
+      <div class="prio-item">
+        <div class="lv p1">最優先</div>
+        <div class="txt"><strong>エスパーク店</strong><span>総合・一体感・就業時間・赤セル数のいずれも深刻。労務・離職リスクに直結しうる。</span></div>
+      </div>
+      <div class="prio-item">
+        <div class="lv p2">高</div>
+        <div class="txt"><strong>本店</strong><span>店長不在・スタイリストToMo極小。構造的リスク。</span></div>
+      </div>
+      <div class="prio-item">
+        <div class="lv p2">高</div>
+        <div class="txt"><strong>野田店・アシスタント層</strong><span>層別で数値急落。早期の聴取で把握しやすい。</span></div>
+      </div>
+      <div class="prio-item">
+        <div class="lv p4">継続</div>
+        <div class="txt"><strong>ハレまち・玉島・全社教育</strong><span>止血と並行し、中期的に計画（成長・店長マインド・店舗間連携）。</span></div>
+      </div>
+    </div>
+
+    <div class="sec-title mt">全社共通テーマ（5店横断）</div>
+    <div class="themes">
+      <div class="theme-cell"><div class="code">O</div>就業時間・休日・休憩</div>
+      <div class="theme-cell"><div class="code">M</div>職場の一体感</div>
+      <div class="theme-cell"><div class="code">H/D</div>教育・技術講習</div>
+      <div class="theme-cell"><div class="code">AJ</div>キャリア・成長</div>
+      <div class="theme-cell"><div class="code">N</div>グループ内のつながり</div>
+    </div>
+  </div>
+  <div class="foot">
+    <span>バランス様 第2回アンケート｜ムスビヒラサポート資料用</span>
+    <span class="pg">1 / 2</span>
+  </div>
+</div>
+
+<div class="card" id="capture-page2">
+  <div class="head">
+    <div class="deco d1"></div>
+    <div class="deco d2"></div>
+    <div class="tag">FOCUS · ACTION</div>
+    <h1>エスパーク店＋止血2店<br>重点アクション</h1>
+    <p class="sub">一体感の崩れと就業時間は相互に作用しうる仮説。現場の事実確認と対話で検証する。</p>
+  </div>
+  <div class="body">
+    <div class="sec-title">エスパーク店｜データ上の3つの警鐘</div>
+    <div class="alert-grid">
+      <div class="alert-box">
+        <div class="big">M −5.9</div>
+        <div class="lbl">職場の一体感</div>
+        <div class="note">期待9.8 → 満足3.9</div>
+      </div>
+      <div class="alert-box">
+        <div class="big">O 低</div>
+        <div class="lbl">就業時間・休憩</div>
+        <div class="note">アシスタント満足 1.5</div>
+      </div>
+      <div class="alert-box">
+        <div class="big">赤 21</div>
+        <div class="lbl">ギャップ項目数</div>
+        <div class="note">他店は最大7前後</div>
+      </div>
+    </div>
+
+    <div class="flow-h">
+      <span class="node">一体感↓</span>
+      <span class="arr">→</span>
+      <span class="node">一人で抱え込み</span>
+      <span class="arr">→</span>
+      <span class="node">時間が伸びる</span>
+      <span class="arr">→</span>
+      <span class="node">疲弊・意味の希薄化</span>
+    </div>
+
+    <div class="sec-title">エスパーク｜推奨アクション（たたき台）</div>
+    <div class="act-grid">
+      <div class="act"><span class="n">1</span><p>就業時間・シフト・休憩の<strong>事実確認</strong><em>速やかに</em></p></div>
+      <div class="act"><span class="n">2</span><p>アシスタント<strong>聴取</strong>（一体感・労働時間）<em>2週間以内目安</em></p></div>
+      <div class="act"><span class="n">3</span><p>スタイリスト4名<strong>1on1/少人数</strong>計画<em>1ヶ月以内目安</em></p></div>
+      <div class="act"><span class="n">4</span><p>一体感の<strong>第1歩</strong>を1つ決め実行<em>次回協議まで</em></p></div>
+    </div>
+
+    <div class="sec-title mt">本店・野田（止血）</div>
+    <div class="two-col">
+      <div class="box-mini honten">
+        <h4>本店</h4>
+        店長不在／スタイリストToMo〜1.0／アシは高評価も連鎖リスク。<strong>店長配置＋権限・報酬</strong>を最優先判断。
+      </div>
+      <div class="box-mini noda">
+        <h4>野田・アシスタント</h4>
+        ToMo−25・心理的安全性1.0／上司への評価は高い。<strong>店長から近況ヒアリング</strong>→次の打ち手を1つ。
+      </div>
+    </div>
+
+    <div class="sec-title mt">時系列の提言</div>
+    <div class="timeline">
+      <div class="tl-row">
+        <div class="when">今週～2週間</div>
+        <div class="what">野田アシ聴取 ／ エスパーク労働実態確認 ／ 本店・店長配置プロセス着手</div>
+      </div>
+      <div class="tl-row">
+        <div class="when">1ヶ月以内</div>
+        <div class="what">店長1on1検討 ／ エスパーク・スタイリスト個別＋一体感施策開始 ／ 本店スタイリスト面談</div>
+      </div>
+      <div class="tl-row">
+        <div class="when">3ヶ月以内</div>
+        <div class="what">全社教育・キャリア面談 ／ 店舗間交流 ／ 玉島店長支援・ハレまち成長フォロー</div>
+      </div>
+    </div>
+
+    <div class="msg">スタッフに見える不満の多くは、<strong>店長を支える仕組み</strong>の不足に起因する部分が大きい。<br>火消しと1年後の再発防止の<strong>両方</strong>がないと、同様のパターンが繰り返されやすい。</div>
+
+    <div class="meet-flow">
+      <span class="m"><b>5分</b> 概要</span>
+      <span class="m"><b>10分</b> 全店比較</span>
+      <span class="m"><b>22分</b> エスパーク</span>
+      <span class="m"><b>12分</b> 本店・野田</span>
+      <span class="m"><b>8分</b> アクション整理</span>
+      <span class="m"><b>3分</b> まとめ</span>
+    </div>
+    <p style="text-align:center;font-size:9px;color:#94a3b8;margin-top:8px;font-weight:600;">ミーティング進行の目安（計60分）</p>
+  </div>
+  <div class="foot">
+    <span>バランス様 第2回アンケート｜図解サマリー</span>
+    <span class="pg">2 / 2</span>
+  </div>
+</div>
+
+<script>
+function toast(m) {
+  var t = document.getElementById('toast');
+  t.textContent = m;
+  t.classList.add('on');
+  setTimeout(function() { t.classList.remove('on'); }, 2200);
+}
+function load(id, on) {
+  var b = document.getElementById(id);
+  b.disabled = on;
+  b.classList.toggle('loading', on);
+}
+async function cap(id) {
+  return await html2canvas(document.getElementById(id), {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false
+  });
+}
+async function png(n) {
+  load('b' + n, true);
+  try {
+    var c = await cap('capture-page' + n);
+    var a = document.createElement('a');
+    a.download = 'balance-survey-diagram-p' + n + '.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+    toast('PNG（' + n + '枚目）をダウンロードしました');
+  } catch (e) { console.error(e); toast('エラー'); }
+  load('b' + n, false);
+}
+async function pdfBoth() {
+  load('bp', true);
+  try {
+    var c1 = await cap('capture-page1');
+    var c2 = await cap('capture-page2');
+    var j = window.jspdf.jsPDF;
+    var w = 210;
+    var h1 = (c1.height / c1.width) * w;
+    var h2 = (c2.height / c2.width) * w;
+    var pdf = new j({ orientation: 'portrait', unit: 'mm', format: [w, h1] });
+    pdf.addImage(c1.toDataURL('image/png'), 'PNG', 0, 0, w, h1);
+    pdf.addPage([w, h2], 'p');
+    pdf.addImage(c2.toDataURL('image/png'), 'PNG', 0, 0, w, h2);
+    pdf.save('balance-survey-diagram-2p.pdf');
+    toast('PDF（2ページ）をダウンロードしました');
+  } catch (e) { console.error(e); toast('エラー'); }
+  load('bp', false);
+}
+</script>
+</body>
+</html>
