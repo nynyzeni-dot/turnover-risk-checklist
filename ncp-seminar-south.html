@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCPセミナー アンケート結果（南エリア）</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    font-family: 'Noto Sans JP', 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 16px;
+    gap: 24px;
+    overflow-x: hidden;
+  }
+
+  /* ===== Toolbar ===== */
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 24px; border-radius: 16px;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); }
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border: none; border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:active { transform: translateY(0); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-download .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1e1b4b; color: #fff;
+    padding: 12px 28px; border-radius: 12px;
+    font-size: 13px; font-weight: 700;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #34d399; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ===== Card ===== */
+  .diagram-card {
+    width: 900px; max-width: 100%;
+    background: #ffffff; border-radius: 24px; overflow: hidden;
+  }
+
+  /* ===== Header ===== */
+  .diagram-header {
+    background: linear-gradient(135deg, #7c2d12 0%, #c2410c 40%, #ea580c 100%);
+    color: #fff; padding: 48px 44px 40px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
+  .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255,255,255,0.06); }
+  .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(255,255,255,0.04); }
+  .header-deco-3 { top: 20px; left: 60px; width: 80px; height: 80px; background: rgba(255,255,255,0.04); }
+  .header-tag {
+    display: inline-block; background: rgba(255,255,255,0.15);
+    padding: 6px 20px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 16px; position: relative; z-index: 1;
+  }
+  .diagram-header h1 {
+    font-size: 26px; font-weight: 900; letter-spacing: 1px;
+    margin-bottom: 10px; position: relative; z-index: 1; line-height: 1.4;
+  }
+  .diagram-header .subtitle {
+    font-size: 14px; color: rgba(255,255,255,0.75); position: relative; z-index: 1;
+  }
+  .header-stats {
+    display: flex; justify-content: center; gap: 32px;
+    margin-top: 20px; position: relative; z-index: 1;
+  }
+  .header-stat { text-align: center; }
+  .header-stat-num { font-size: 32px; font-weight: 900; color: #fff; }
+  .header-stat-label { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; }
+
+  /* ===== Body ===== */
+  .diagram-body { padding: 40px 40px 32px; }
+
+  .section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #c2410c, #ea580c);
+    color: #fff; font-size: 12px; font-weight: 800;
+    margin-right: 10px; flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 16px; font-weight: 800; color: #1e293b;
+    display: flex; align-items: center;
+    margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  /* ===== Section 1: Keyword Ranking ===== */
+  .ranking-list { margin-bottom: 36px; }
+  .ranking-item {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  }
+  .ranking-rank {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0;
+  }
+  .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+  .rank-3 { background: linear-gradient(135deg, #cd7f32, #a0522d); }
+  .rank-other { background: #cbd5e1; }
+  .ranking-label {
+    font-size: 13px; font-weight: 700; color: #334155;
+    width: 200px; flex-shrink: 0;
+  }
+  .ranking-bar-wrap {
+    flex: 1; height: 28px; background: #f1f5f9;
+    border-radius: 14px; overflow: hidden; position: relative;
+  }
+  .ranking-bar {
+    height: 100%; border-radius: 14px;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 11px; font-weight: 800; color: #fff; min-width: 40px;
+  }
+  .bar-gold { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+  .bar-silver { background: linear-gradient(90deg, #94a3b8, #64748b); }
+  .bar-bronze { background: linear-gradient(90deg, #d4a574, #cd7f32); }
+  .bar-default { background: linear-gradient(90deg, #fdba74, #f97316); }
+
+  /* ===== Section 2: 100% Badge ===== */
+  .perfect-box {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border: 2px solid #a7f3d0; border-radius: 18px;
+    padding: 32px 24px; text-align: center; margin-bottom: 36px;
+    position: relative; overflow: hidden;
+  }
+  .perfect-deco {
+    position: absolute; top: -20px; right: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(16,185,129,0.08); pointer-events: none;
+  }
+  .perfect-num {
+    font-size: 64px; font-weight: 900; color: #059669;
+    line-height: 1.1; position: relative; z-index: 1;
+  }
+  .perfect-label {
+    font-size: 16px; font-weight: 800; color: #065f46;
+    margin-top: 4px; position: relative; z-index: 1;
+  }
+  .perfect-sub {
+    font-size: 13px; color: #6b7280; margin-top: 8px; position: relative; z-index: 1;
+  }
+
+  /* ===== Section 3: Action Declaration ===== */
+  .action-grid {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 36px;
+  }
+  .action-card {
+    flex: 1; min-width: 140px;
+    border-radius: 14px; padding: 20px 16px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .action-card-1 { background: #fff7ed; border: 1.5px solid #fed7aa; }
+  .action-card-2 { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+  .action-card-3 { background: #fef3c7; border: 1.5px solid #fde68a; }
+  .action-card-4 { background: #faf5ff; border: 1.5px solid #e9d5ff; }
+  .action-card-5 { background: #f1f5f9; border: 1.5px solid #e2e8f0; }
+  .action-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .action-icon svg { width: 26px; height: 26px; }
+  .action-card-1 .action-icon { background: #ffedd5; }
+  .action-card-1 .action-icon svg { fill: #ea580c; }
+  .action-card-2 .action-icon { background: #dcfce7; }
+  .action-card-2 .action-icon svg { fill: #16a34a; }
+  .action-card-3 .action-icon { background: #fef08a; }
+  .action-card-3 .action-icon svg { fill: #ca8a04; }
+  .action-card-4 .action-icon { background: #f3e8ff; }
+  .action-card-4 .action-icon svg { fill: #9333ea; }
+  .action-card-5 .action-icon { background: #e2e8f0; }
+  .action-card-5 .action-icon svg { fill: #64748b; }
+  .action-pct { font-size: 28px; font-weight: 900; margin-bottom: 2px; }
+  .action-card-1 .action-pct { color: #ea580c; }
+  .action-card-2 .action-pct { color: #16a34a; }
+  .action-card-3 .action-pct { color: #ca8a04; }
+  .action-card-4 .action-pct { color: #9333ea; }
+  .action-card-5 .action-pct { color: #64748b; }
+  .action-name { font-size: 11px; font-weight: 700; color: #475569; line-height: 1.4; }
+  .action-count { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+  /* ===== Section 4: Challenges ===== */
+  .challenge-list { margin-bottom: 36px; }
+  .challenge-item {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  }
+  .challenge-label {
+    font-size: 12px; font-weight: 600; color: #475569;
+    width: 220px; flex-shrink: 0; text-align: right;
+  }
+  .challenge-bar-wrap {
+    flex: 1; height: 24px; background: #f8fafc;
+    border-radius: 12px; overflow: hidden;
+  }
+  .challenge-bar {
+    height: 100%; border-radius: 12px;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 10px; font-weight: 800; color: #fff; min-width: 36px;
+  }
+  .cbar-1 { background: linear-gradient(90deg, #f87171, #ef4444); }
+  .cbar-2 { background: linear-gradient(90deg, #34d399, #10b981); }
+  .cbar-3 { background: linear-gradient(90deg, #fb923c, #f97316); }
+  .cbar-4 { background: linear-gradient(90deg, #fbbf24, #eab308); }
+  .cbar-5 { background: linear-gradient(90deg, #a3e635, #84cc16); }
+  .cbar-6 { background: linear-gradient(90deg, #94a3b8, #64748b); }
+
+  /* ===== Section 5: Voices ===== */
+  .voices-grid {
+    display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+  }
+  .voice-card {
+    flex: 1 1 calc(50% - 6px); min-width: 240px;
+    background: #f8fafc; border-radius: 14px;
+    padding: 18px 20px; position: relative;
+    border-left: 4px solid #ea580c;
+  }
+  .voice-card .quote-mark {
+    font-size: 28px; font-weight: 900; color: #fed7aa;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .voice-card p {
+    font-size: 12px; color: #475569; line-height: 1.7; font-weight: 500;
+  }
+
+  /* ===== Point Box ===== */
+  .point-box {
+    background: #fff7ed; border-radius: 10px;
+    padding: 10px 16px; margin-top: 12px; margin-bottom: 36px;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .point-icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; }
+  .point-icon svg { width: 20px; height: 20px; fill: #ea580c; }
+  .point-text { font-size: 12px; font-weight: 600; color: #9a3412; line-height: 1.6; }
+
+  /* ===== Bottom CTA ===== */
+  .bottom-cta {
+    margin-top: 8px; text-align: center;
+    padding: 28px 24px; background: #1e293b;
+    border-radius: 18px; position: relative; overflow: hidden;
+  }
+  .cta-deco-1 {
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(234,88,12,0.12); pointer-events: none;
+  }
+  .cta-deco-2 {
+    position: absolute; bottom: -40px; left: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(234,88,12,0.08); pointer-events: none;
+  }
+  .bottom-cta .cta-text {
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    margin-bottom: 6px; position: relative; z-index: 1;
+  }
+  .bottom-cta .cta-headline {
+    font-size: 20px; font-weight: 900; color: #fdba74;
+    line-height: 1.5; position: relative; z-index: 1;
+  }
+  .highlight-num { color: #fbbf24; }
+
+  /* ===== Footer ===== */
+  .diagram-footer {
+    padding: 14px 40px; border-top: 1px solid #f3f4f6;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .diagram-footer small { font-size: 10px; color: #d1d5db; }
+  .diagram-footer .dots { display: flex; gap: 4px; }
+  .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
+  .diagram-footer .dots span:first-child { background: #ea580c; }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 600px) {
+    body { padding: 16px 8px; }
+    .diagram-header { padding: 32px 20px 28px; }
+    .diagram-header h1 { font-size: 18px; }
+    .diagram-header .subtitle { font-size: 12px; }
+    .header-stats { gap: 16px; }
+    .header-stat-num { font-size: 24px; }
+    .diagram-body { padding: 24px 16px 20px; }
+    .section-title { font-size: 13px; }
+    .ranking-label { width: 120px; font-size: 11px; }
+    .ranking-bar { font-size: 10px; }
+    .perfect-num { font-size: 48px; }
+    .perfect-label { font-size: 14px; }
+    .action-grid { flex-direction: column; }
+    .action-card { min-width: 100%; }
+    .challenge-label { width: 130px; font-size: 10px; }
+    .voices-grid { flex-direction: column; }
+    .voice-card { flex: 1 1 100%; min-width: 100%; }
+    .bottom-cta .cta-headline { font-size: 16px; }
+    .point-box { padding: 8px 12px; }
+    .point-text { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar" id="toolbar">
+  <span class="toolbar-label">DOWNLOAD:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>
+    </svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+
+<!-- Diagram Card -->
+<div class="diagram-card" id="capture">
+
+  <!-- Header -->
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="deco-circle header-deco-3"></div>
+    <div class="header-tag">SOUTH AREA - 2025.03.29</div>
+    <h1>NCPセミナー アンケート結果<br>南エリア</h1>
+    <p class="subtitle">3月29日実施 / 27名全員が回答</p>
+    <div class="header-stats">
+      <div class="header-stat">
+        <div class="header-stat-num">27</div>
+        <div class="header-stat-label">名 回答</div>
+      </div>
+      <div class="header-stat">
+        <div class="header-stat-num">100%</div>
+        <div class="header-stat-label">回答率</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diagram-body">
+
+    <!-- Section 1: Keyword Ranking -->
+    <div class="section-title">
+      <span class="section-num">1</span>
+      一番印象に残ったこと
+    </div>
+
+    <div class="ranking-list">
+      <div class="ranking-item">
+        <div class="ranking-rank rank-1">1</div>
+        <div class="ranking-label">サンドイッチ方式</div>
+        <div class="ranking-bar-wrap">
+          <div class="ranking-bar bar-gold" style="width:100%">10名</div>
+        </div>
+      </div>
+      <div class="ranking-item">
+        <div class="ranking-rank rank-2">2</div>
+        <div class="ranking-label">母性と父性のバランス</div>
+        <div class="ranking-bar-wrap">
+          <div class="ranking-bar bar-silver" style="width:70%">7名</div>
+        </div>
+      </div>
+      <div class="ranking-item">
+        <div class="ranking-rank rank-3">3</div>
+        <div class="ranking-label">褒め方の大切さ</div>
+        <div class="ranking-bar-wrap">
+          <div class="ranking-bar bar-bronze" style="width:30%">3名</div>
+        </div>
+      </div>
+      <div class="ranking-item">
+        <div class="ranking-rank rank-other">4</div>
+        <div class="ranking-label">伝え方</div>
+        <div class="ranking-bar-wrap">
+          <div class="ranking-bar bar-default" style="width:10%">1名</div>
+        </div>
+      </div>
+      <div class="ranking-item">
+        <div class="ranking-rank rank-other">5</div>
+        <div class="ranking-label">好子・嫌子</div>
+        <div class="ranking-bar-wrap">
+          <div class="ranking-bar bar-default" style="width:10%">1名</div>
+        </div>
+      </div>
+      <div class="ranking-item">
+        <div class="ranking-rank rank-other">6</div>
+        <div class="ranking-label">名前を呼ぶ効果</div>
+        <div class="ranking-bar-wrap">
+          <div class="ranking-bar bar-default" style="width:10%">1名</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="point-box">
+      <div class="point-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+      <div class="point-text">「サンドイッチ方式」と「母性と父性」のツートップで全体の63%。伝え方パートが圧倒的。</div>
+    </div>
+
+    <!-- Section 2: 100% -->
+    <div class="section-title">
+      <span class="section-num">2</span>
+      お客様の名前を呼んでみようと思いますか？
+    </div>
+
+    <div class="perfect-box">
+      <div class="perfect-deco"></div>
+      <div class="perfect-num">100%</div>
+      <div class="perfect-label">「はい、すぐやってみる」</div>
+      <div class="perfect-sub">27名中27名 ── 不安・迷い ゼロ</div>
+    </div>
+
+    <div class="point-box">
+      <div class="point-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+      <div class="point-text">全員が迷いなく「やる」と即答。セミナーで不安が完全に解消された。</div>
+    </div>
+
+    <!-- Section 3: Action Declarations -->
+    <div class="section-title">
+      <span class="section-num">3</span>
+      明日から最初にやること（自分で宣言）
+    </div>
+
+    <div class="action-grid">
+      <div class="action-card action-card-1">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <div class="action-pct">37%</div>
+        <div class="action-name">褒める<br>いいところ探し</div>
+        <div class="action-count">10名</div>
+      </div>
+      <div class="action-card action-card-2">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <div class="action-pct">26%</div>
+        <div class="action-name">お客様の<br>名前を呼ぶ</div>
+        <div class="action-count">7名</div>
+      </div>
+      <div class="action-card action-card-3">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+        </div>
+        <div class="action-pct">19%</div>
+        <div class="action-name">サンドイッチ<br>方式で伝える</div>
+        <div class="action-count">5名</div>
+      </div>
+      <div class="action-card action-card-4">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        </div>
+        <div class="action-pct">7%</div>
+        <div class="action-name">率先して<br>自分から行動</div>
+        <div class="action-count">2名</div>
+      </div>
+      <div class="action-card action-card-5">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        </div>
+        <div class="action-pct">11%</div>
+        <div class="action-name">その他</div>
+        <div class="action-count">3名</div>
+      </div>
+    </div>
+
+    <div class="point-box">
+      <div class="point-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+      <div class="point-text">「褒める・いいところ探し」が最多。全員が具体的なアクションを自分の言葉で宣言。</div>
+    </div>
+
+    <!-- Section 4: Challenges -->
+    <div class="section-title">
+      <span class="section-num">4</span>
+      スタッフに伝える時、一番難しそうなこと
+    </div>
+
+    <div class="challenge-list">
+      <div class="challenge-item">
+        <div class="challenge-label">伝え方・言葉の選び方</div>
+        <div class="challenge-bar-wrap">
+          <div class="challenge-bar cbar-1" style="width:100%">30%</div>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="challenge-label">その他</div>
+        <div class="challenge-bar-wrap">
+          <div class="challenge-bar cbar-6" style="width:93%">28%</div>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="challenge-label">特になし・自信あり</div>
+        <div class="challenge-bar-wrap">
+          <div class="challenge-bar cbar-2" style="width:63%">19%</div>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="challenge-label">母性（褒める・認める）</div>
+        <div class="challenge-bar-wrap">
+          <div class="challenge-bar cbar-3" style="width:50%">15%</div>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="challenge-label">サンドイッチ方式の実践</div>
+        <div class="challenge-bar-wrap">
+          <div class="challenge-bar cbar-4" style="width:13%">4%</div>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="challenge-label">継続してもらうこと</div>
+        <div class="challenge-bar-wrap">
+          <div class="challenge-bar cbar-5" style="width:13%">4%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="point-box">
+      <div class="point-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+      <div class="point-text">「伝え方」が最大の課題。一方「自信あり」が19%（5名）と、南エリアは自信派がやや多い。</div>
+    </div>
+
+    <!-- Section 5: Voices -->
+    <div class="section-title">
+      <span class="section-num">5</span>
+      参加者の声（ピックアップ）
+    </div>
+
+    <div class="voices-grid">
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>仕事で疲れてたけど吹き飛びました</p>
+      </div>
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>とにかくタイミングが良かった。本当に救われました</p>
+      </div>
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>意識してスタッフを成長させていく楽しさが伝わりました</p>
+      </div>
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>スタッフに興味を持ち、良いところを探すように心がけてるので、それが間違いではないと思いました</p>
+      </div>
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>精進します…出来てなさが浮き彫りになった日</p>
+      </div>
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>名前を呼ぶ事が会社の決まりって事にならないように伝える事が難しい</p>
+      </div>
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>時間が経つのが早く感じる講習でした</p>
+      </div>
+      <div class="voice-card">
+        <div class="quote-mark">"</div>
+        <p>大好きです</p>
+      </div>
+    </div>
+
+    <div class="point-box" style="margin-bottom: 8px;">
+      <div class="point-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+      <div class="point-text">知識だけでなく、感情レベルで変化が起きている。「救われた」「吹き飛んだ」など実感の声。</div>
+    </div>
+
+    <!-- Bottom CTA -->
+    <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
+      <div class="cta-text">South Area - 27 Respondents</div>
+      <div class="cta-headline">
+        <span class="highlight-num">100%</span> が「すぐやってみる」<br>
+        不安・迷い <span class="highlight-num">ゼロ</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="diagram-footer">
+    <small>NCP Seminar Survey - South Area (2025.03.29)</small>
+    <div class="dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setLoading(id, on) {
+  const b = document.getElementById(id);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+async function captureCard() {
+  const el = document.getElementById('capture');
+  return await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+}
+async function downloadPNG() {
+  setLoading('btn-png', true);
+  try {
+    const canvas = await captureCard();
+    const link = document.createElement('a');
+    link.download = 'ncp-seminar-south.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('PNGをダウンロードしました');
+  } catch (e) { console.error(e); showToast('エラーが発生しました'); }
+  setLoading('btn-png', false);
+}
+async function downloadPDF() {
+  setLoading('btn-pdf', true);
+  try {
+    const canvas = await captureCard();
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdfW = 210;
+    const pdfH = (canvas.height / canvas.width) * pdfW;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+    pdf.save('ncp-seminar-south.pdf');
+    showToast('PDFをダウンロードしました');
+  } catch (e) { console.error(e); showToast('エラーが発生しました'); }
+  setLoading('btn-pdf', false);
+}
+</script>
+
+</body>
+</html>
