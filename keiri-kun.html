@@ -285,6 +285,7 @@ td { font-size:.9rem; }
     </main>
 </div>
 
+<script src="keiri_data.js"></script>
 <script>
 // ===== Data Store (localStorage) =====
 const STORE_KEY = 'keiri_kun_data';
@@ -318,8 +319,8 @@ function initDefaultData() {
             {id:8, name:'Amazonマスターカード', company_id:5}
         ],
         rules: DEFAULT_RULES,
-        expenses: [],
-        nextExpenseId: 1
+        expenses: (typeof PRELOADED_EXPENSES !== 'undefined') ? PRELOADED_EXPENSES : [],
+        nextExpenseId: (typeof PRELOADED_NEXT_ID !== 'undefined') ? PRELOADED_NEXT_ID : 1
     };
     saveStore(data);
     return data;
