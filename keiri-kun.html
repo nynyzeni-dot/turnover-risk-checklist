@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>けいりくん - 経費管理ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --primary-color: #4361ee;
+    --primary-hover: #3a0ca3;
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --accent-red: #ef4444;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+body { background:var(--bg-dark); color:var(--text-main); }
+.app-container { display:flex; min-height:100vh; }
+
+/* Sidebar */
+.sidebar { width:260px; background:var(--bg-card); border-right:1px solid var(--border-color); padding:2rem 1rem; display:flex; flex-direction:column; flex-shrink:0; }
+.logo h2 { font-size:1.5rem; font-weight:700; color:white; margin-bottom:2.5rem; padding-left:1rem; }
+nav { display:flex; flex-direction:column; gap:.5rem; }
+nav a { color:var(--text-muted); text-decoration:none; padding:.8rem 1rem; border-radius:8px; transition:all .2s; font-weight:500; cursor:pointer; }
+nav a:hover, nav a.active { background:rgba(67,97,238,.1); color:var(--primary-color); }
+
+/* Main */
+.main-content { flex:1; padding:2rem 3rem; display:flex; flex-direction:column; gap:2rem; overflow-x:auto; }
+header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+header h1 { font-size:1.8rem; font-weight:600; }
+
+select { background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); padding:.6rem 2.5rem .6rem 1rem; border-radius:8px; appearance:none; font-size:.95rem; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right .5rem center; background-size:1.2em; }
+input[type="text"], input[type="search"] { background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); padding:.6rem 1rem; border-radius:8px; font-size:.95rem; }
+
+.widget { background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:1.5rem; box-shadow:0 4px 6px -1px rgba(0,0,0,.1); }
+.widget h3 { font-size:1.2rem; margin-bottom:1.2rem; color:var(--text-main); }
+
+table { width:100%; border-collapse:collapse; }
+th,td { padding:.8rem 1rem; text-align:left; border-bottom:1px solid var(--border-color); }
+th { color:var(--text-muted); font-weight:500; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; }
+td { font-size:.9rem; }
+.amount { font-weight:500; font-family:monospace; font-size:1rem; }
+.badge { background:rgba(67,97,238,.2); color:#818cf8; padding:.3rem .6rem; border-radius:999px; font-size:.75rem; font-weight:600; display:inline-block; }
+.badge-confirmed { background:rgba(16,185,129,.2); color:var(--accent-green); }
+.badge-unconfirmed { background:rgba(239,68,68,.2); color:var(--accent-red); }
+
+.btn { border:none; padding:.5rem 1rem; border-radius:6px; cursor:pointer; font-weight:500; transition:all .2s; font-size:.85rem; }
+.btn-primary { background:var(--primary-color); color:white; }
+.btn-primary:hover { background:var(--primary-hover); }
+.btn-danger { background:var(--accent-red); color:white; }
+.btn-danger:hover { background:#dc2626; }
+.btn-sm { padding:.3rem .6rem; font-size:.8rem; }
+
+/* Pages */
+.page { display:none; flex-direction:column; gap:1.5rem; }
+.page.active { display:flex; }
+
+/* Drop zone */
+.drop-zone { width:100%; height:200px; border:2px dashed var(--primary-color); border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:rgba(67,97,238,.05); transition:all .3s; cursor:pointer; position:relative; }
+.drop-zone.dragover { background:rgba(67,97,238,.2); border-color:#fff; }
+.drop-zone input[type="file"] { position:absolute; width:100%; height:100%; opacity:0; cursor:pointer; z-index:10; }
+.drop-zone-text { color:var(--text-muted); font-size:1rem; margin-top:.5rem; }
+.icon-upload { width:40px; height:40px; }
+
+.form-group { display:flex; flex-direction:column; gap:.5rem; margin-bottom:1rem; }
+.form-group label { color:var(--text-muted); font-size:.9rem; }
+
+.btn-upload { background:var(--primary-color); color:white; border:none; padding:1rem; border-radius:8px; font-size:1.1rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-upload:hover { background:var(--primary-hover); }
+
+/* Stats cards */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1rem; }
+.stat-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:1.5rem; }
+.stat-card .label { color:var(--text-muted); font-size:.85rem; margin-bottom:.5rem; }
+.stat-card .value { font-size:1.8rem; font-weight:700; }
+.stat-card .sub { color:var(--text-muted); font-size:.8rem; margin-top:.3rem; }
+
+/* Alert */
+.alert { padding:1rem; border-radius:8px; margin-bottom:1rem; }
+.alert-success { background:rgba(16,185,129,.1); color:var(--accent-green); }
+.alert-error { background:rgba(239,68,68,.1); color:var(--accent-red); }
+
+/* Rule form inline */
+.rule-form { display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap; }
+.rule-form input, .rule-form select { padding:.5rem; }
+
+/* Pagination */
+.pagination { display:flex; gap:.5rem; justify-content:center; margin-top:1rem; align-items:center; }
+.pagination button { background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); padding:.4rem .8rem; border-radius:6px; cursor:pointer; }
+.pagination button.active { background:var(--primary-color); border-color:var(--primary-color); }
+.pagination button:disabled { opacity:.3; cursor:default; }
+
+/* Search */
+.search-bar { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+.search-bar input { flex:1; min-width:200px; }
+
+/* Export options */
+.export-options { display:flex; gap:1rem; flex-wrap:wrap; }
+.export-options .btn { padding:.8rem 1.5rem; font-size:1rem; }
+
+/* Mobile */
+@media(max-width:768px) {
+    .app-container { flex-direction:column; }
+    .sidebar { width:100%; flex-direction:row; padding:1rem; overflow-x:auto; }
+    .sidebar nav { flex-direction:row; }
+    .logo { display:none; }
+    .main-content { padding:1rem; }
+    table { font-size:.8rem; }
+    th,td { padding:.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="logo"><h2>けいりくん</h2></div>
+        <nav>
+            <a class="active" data-page="dashboard">ダッシュボード</a>
+            <a data-page="import">CSVインポート</a>
+            <a data-page="expenses">経費一覧</a>
+            <a data-page="rules">勘定科目ルール</a>
+            <a data-page="export">税理士用出力</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <!-- ダッシュボード -->
+        <div id="page-dashboard" class="page active">
+            <header>
+                <h1>ダッシュボード</h1>
+                <div style="display:flex;gap:.5rem;align-items:center;">
+                    <select id="dash-company-filter">
+                        <option value="all">すべての会社</option>
+                    </select>
+                    <select id="dash-month-filter">
+                        <option value="all">すべての月</option>
+                    </select>
+                </div>
+            </header>
+            <div class="stats-grid" id="stats-grid"></div>
+            <section class="widget">
+                <h3>未確認の経費 (要対応)</h3>
+                <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>日付</th><th>利用先</th><th>金額</th><th>カード</th><th>推測科目</th><th>アクション</th></tr></thead>
+                    <tbody id="unconfirmed-tbody"></tbody>
+                </table>
+                </div>
+            </section>
+            <section class="widget">
+                <h3>月別集計</h3>
+                <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>月</th><th>会社</th><th>合計金額</th><th>件数</th></tr></thead>
+                    <tbody id="monthly-tbody"></tbody>
+                </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- CSVインポート -->
+        <div id="page-import" class="page">
+            <header><h1>CSVインポート</h1></header>
+            <div id="import-alert"></div>
+            <section class="widget">
+                <div style="max-width:600px;">
+                    <div class="form-group">
+                        <label>支払い会社</label>
+                        <select id="import-company"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>使用したカード</label>
+                        <select id="import-card"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>CSVファイル (ドラッグ&ドロップ)</label>
+                        <div class="drop-zone" id="drop-zone">
+                            <svg class="icon-upload" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 13v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5M12 15V3M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            </svg>
+                            <span class="drop-zone-text" id="file-name-display">ここにCSVをドロップ or クリックして選択</span>
+                            <input type="file" id="file-input" accept=".csv">
+                        </div>
+                    </div>
+                    <button class="btn-upload" id="btn-import">読み込み＆自動仕訳を実行</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- 経費一覧 -->
+        <div id="page-expenses" class="page">
+            <header><h1>経費一覧</h1></header>
+            <div class="search-bar">
+                <input type="search" id="expense-search" placeholder="利用先で検索...">
+                <select id="expense-company-filter"><option value="all">すべての会社</option></select>
+                <select id="expense-category-filter"><option value="all">すべての科目</option></select>
+                <select id="expense-status-filter">
+                    <option value="all">すべて</option>
+                    <option value="0">未確認</option>
+                    <option value="1">確認済</option>
+                </select>
+            </div>
+            <section class="widget">
+                <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>日付</th><th>利用先</th><th>金額</th><th>会社</th><th>カード</th><th>科目</th><th>状態</th><th>操作</th></tr></thead>
+                    <tbody id="expenses-tbody"></tbody>
+                </table>
+                </div>
+                <div class="pagination" id="expenses-pagination"></div>
+            </section>
+        </div>
+
+        <!-- 勘定科目ルール -->
+        <div id="page-rules" class="page">
+            <header><h1>勘定科目ルール</h1></header>
+            <section class="widget">
+                <h3>新しいルールを追加</h3>
+                <div class="rule-form">
+                    <div class="form-group" style="flex:1;min-width:200px;">
+                        <label>キーワード</label>
+                        <input type="text" id="rule-keyword" placeholder="例: スターバックス">
+                    </div>
+                    <div class="form-group" style="flex:1;min-width:150px;">
+                        <label>勘定科目</label>
+                        <input type="text" id="rule-category" placeholder="例: 飲食費" list="category-list">
+                        <datalist id="category-list"></datalist>
+                    </div>
+                    <button class="btn btn-primary" id="btn-add-rule" style="align-self:flex-end;margin-bottom:1rem;">追加</button>
+                </div>
+            </section>
+            <section class="widget">
+                <h3>登録済みルール (<span id="rule-count">0</span>件)</h3>
+                <input type="search" id="rule-search" placeholder="ルールを検索..." style="margin-bottom:1rem;width:100%;max-width:300px;">
+                <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>キーワード</th><th>勘定科目</th><th>操作</th></tr></thead>
+                    <tbody id="rules-tbody"></tbody>
+                </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- 税理士用出力 -->
+        <div id="page-export" class="page">
+            <header><h1>税理士用出力</h1></header>
+            <section class="widget">
+                <h3>エクスポート設定</h3>
+                <div class="form-group">
+                    <label>会社</label>
+                    <select id="export-company"><option value="all">すべて</option></select>
+                </div>
+                <div class="form-group">
+                    <label>月</label>
+                    <select id="export-month"><option value="all">すべて</option></select>
+                </div>
+                <div class="form-group">
+                    <label>状態</label>
+                    <select id="export-status">
+                        <option value="all">すべて</option>
+                        <option value="1">確認済のみ</option>
+                        <option value="0">未確認のみ</option>
+                    </select>
+                </div>
+                <div class="export-options">
+                    <button class="btn btn-primary" id="btn-export-csv">CSVダウンロード</button>
+                    <button class="btn btn-primary" style="background:var(--accent-green);" id="btn-export-summary">月別サマリー CSV</button>
+                </div>
+            </section>
+            <section class="widget">
+                <h3>データ管理</h3>
+                <div class="export-options">
+                    <button class="btn btn-primary" id="btn-backup">バックアップ (JSON)</button>
+                    <button class="btn btn-primary" style="background:var(--accent-yellow);color:#000;" id="btn-restore">リストア (JSON)</button>
+                    <input type="file" id="restore-input" accept=".json" style="display:none;">
+                    <button class="btn btn-danger" id="btn-clear-data">全データ削除</button>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script>
+// ===== Data Store (localStorage) =====
+const STORE_KEY = 'keiri_kun_data';
+
+function getStore() {
+    try {
+        const d = JSON.parse(localStorage.getItem(STORE_KEY));
+        if (d && d.companies) return d;
+    } catch(e) {}
+    return initDefaultData();
+}
+
+function saveStore(data) {
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+
+function initDefaultData() {
+    const data = {
+        companies: [
+            {id:1, name:'イマジナリー'},
+            {id:5, name:'関西NGB'}
+        ],
+        cards: [
+            {id:1, name:'ANAカード', company_id:1},
+            {id:2, name:'VISAカード', company_id:1},
+            {id:3, name:'ETCカード', company_id:1},
+            {id:4, name:'新幹線用VISAカード', company_id:1},
+            {id:5, name:'マリオットボンヴォイ', company_id:5},
+            {id:6, name:'アメックスカード', company_id:5},
+            {id:7, name:'楽天カード', company_id:5},
+            {id:8, name:'Amazonマスターカード', company_id:5}
+        ],
+        rules: DEFAULT_RULES,
+        expenses: [],
+        nextExpenseId: 1
+    };
+    saveStore(data);
+    return data;
+}
+
+const DEFAULT_RULES = [
+{"keyword":"Amazon","category":"資料"},{"keyword":"AMAZON.CO.JP","category":"資料"},{"keyword":"Amazon Downloads","category":"資料"},{"keyword":"DMM","category":"セミナー"},{"keyword":"bar","category":"飲食費"},{"keyword":"居酒屋","category":"飲食費"},{"keyword":"レストラン","category":"飲食費"},{"keyword":"焼肉","category":"飲食費"},{"keyword":"寿司","category":"飲食費"},{"keyword":"JR","category":"交通費"},{"keyword":"タクシー","category":"交通費"},{"keyword":"Suica","category":"交通費"},{"keyword":"新幹線","category":"交通費"},{"keyword":"ホテル","category":"宿泊費"},{"keyword":"シェラトン","category":"宿泊費"},{"keyword":"マリオット","category":"宿泊費"},{"keyword":"ユニクロ","category":"衣装"},{"keyword":"ZOZOTOWN","category":"衣装"},{"keyword":"FIT PLACE","category":"ジム"},{"keyword":"ジム","category":"ジム"},{"keyword":"Netflix","category":"仕事用アプリ"},{"keyword":"Apple iTunes","category":"仕事用アプリ"},{"keyword":"全厚済","category":"共済"},{"keyword":"ソフトバンク","category":"携帯料金"},{"keyword":"楽天モバイル","category":"携帯料金"},{"keyword":"GOアプリ","category":"交通費"},{"keyword":"Bar","category":"飲食費"},{"keyword":"ゴルフクラブ","category":"ゴルフ"},{"keyword":"ノートン","category":"仕事用アプリ"},{"keyword":"ADOBE SYSTEMS SOFTWARE (ADOBE.LY/JPJP)","category":"仕事用アプリ"},{"keyword":"CLAUDE.AI SUBSCRIPTION (ANTHROPIC.COM)","category":"AI"},{"keyword":"OPENAI *CHATGPT SUBSCR (OPENAI.COM )","category":"AI"},{"keyword":"タイムズカー","category":"交通費"},{"keyword":"スターバックス","category":"飲食費"},{"keyword":"セブンイレブン","category":"除外"},{"keyword":"マクドナルド","category":"飲食費"},{"keyword":"ローソン","category":"除外"},{"keyword":"ファミリーマート","category":"除外"},{"keyword":"GOOGLE *GOOGLE ONE","category":"AI"},{"keyword":"エックスサーバー","category":"レンタルサーバー"},{"keyword":"BOOKNOTION Z","category":"仕事用アプリ"},{"keyword":"無印良品","category":"社宅用家具"},{"keyword":"ANKER","category":"PC機器"},{"keyword":"XIAOMI JAPAN","category":"PC機器"},{"keyword":"ダイソー","category":"備品"},{"keyword":"ドンキ","category":"備品"},{"keyword":"コストコ ホールセール ジャパン","category":"社宅用家具"},{"keyword":"返品","category":"返品"},{"keyword":"消費税","category":"消費税"},{"keyword":"年会費","category":"年会費"},{"keyword":"ライフ香里園店","category":"除外"},{"keyword":"サンドラッグ","category":"除外"},{"keyword":"トップワールド","category":"除外"},{"keyword":"大ガス","category":"除外"},{"keyword":"もより市","category":"除外"},{"keyword":"フレスト","category":"除外"},{"keyword":"日本郵便（株）","category":"郵送代"},{"keyword":"三井住友海上火災保険","category":"保険"},{"keyword":"オプテージ利用料金","category":"通信費"},{"keyword":"北摂交通","category":"交通費"},{"keyword":"京阪電車","category":"交通費"},{"keyword":"ＪＲ西日本","category":"交通費"},{"keyword":"エクスプレス予約（個ＥＸ会員）","category":"交通費"},{"keyword":"ＧＯアプリ","category":"交通費"},{"keyword":"Ｓｕｉｃａ","category":"交通費"},{"keyword":"ＳＱ＊だうんたうん","category":"飲食費"},{"keyword":"ＢａｒＡｉｂａ","category":"飲食費"},{"keyword":"ＡＭＡＺＯＮ．ＣＯ．ＪＰ","category":"PC機器"},{"keyword":"バイオデンタルクリニック","category":"ホワイトニング"},{"keyword":"つるやゴルフ","category":"ゴルフ用品"},{"keyword":"成城石井","category":"差し入れ"},{"keyword":"楽天市場","category":"備品"},{"keyword":"ＤＭＭ","category":"セミナー費"},{"keyword":"GOOGLE*YOUTUBEPREMIUM GOOGLE PAYMENT","category":"グーグル課金"},{"keyword":"GOOGLE *LINE CALLS MES","category":"仕事用アプリ"},{"keyword":"ＮｅｗｓＰｉｃｋｓ","category":"仕事用アプリ"},{"keyword":"Ａｍａｚｏｎ Ｄｏｗｎｌｏａｄｓ","category":"仕事用アプリ"},{"keyword":"MONSTER HUNTER","category":"除外"},{"keyword":"Ｎｅｔｆｌｉｘ（同）","category":"除外"},{"keyword":"口座振替ができませんでした","category":"除外"},{"keyword":"前回分口座振替金額","category":"除外"},{"keyword":"Ａｍａｚｏｎふるさと納税","category":"除外"},{"keyword":"SP EPSOMSALTSHOP.JP","category":"除外"},{"keyword":"SP 0F5D3C-38","category":"除外"},{"keyword":"アマゾン ＪＰ マーケットプレイス","category":"資料"},{"keyword":"アマゾンサービシーズインターナショナル","category":"資料"},{"keyword":"ＴＳＵＴＡＹＡ","category":"資料"},{"keyword":"（株）コスモ","category":"コスモ"},{"keyword":"基本カード年会費","category":"年会費"},{"keyword":"ＮＰＯ法人居場所サポートクラブロベ","category":"寄付"},{"keyword":"ボクシングクラブ","category":"ジム"},{"keyword":"駅前ゴルフスク-ル","category":"ジム"},{"keyword":"ドン キホーテ","category":"社宅用家具"},{"keyword":"KENERGY USD利用国KOR","category":"仕入れ"},{"keyword":"SP MOFT-JP (MOFTJAPAN.COM)","category":"PC機器"},{"keyword":"SP MATSUOKATEBUKURO.JP","category":"ゴルフ用品"},{"keyword":"SP HUSHTUG","category":"衣装"},{"keyword":"京阪モール","category":"衣装"},{"keyword":"グランフロント","category":"衣装"},{"keyword":"ジェイアール京都伊勢丹","category":"衣装"},{"keyword":"ＺＯＺＯ","category":"衣装"},{"keyword":"くずはモール","category":"衣装代"},{"keyword":"フォーポイント フレックス ＢＹシェラ","category":"宿泊費"},{"keyword":"フォーポイント フレックス ＢＹ シェ","category":"宿泊費"},{"keyword":"モクシー 大阪新梅田","category":"宿泊費"},{"keyword":"ドーミーイン","category":"宿泊費"}
+];
+
+// ===== CSV Parser =====
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const headers = parseCSVLine(lines[0]);
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const vals = parseCSVLine(lines[i]);
+        const row = {};
+        headers.forEach((h, j) => { row[h] = vals[j] || ''; });
+        rows.push(row);
+    }
+    return rows;
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQuotes) {
+            if (ch === '"') {
+                if (i + 1 < line.length && line[i+1] === '"') { current += '"'; i++; }
+                else inQuotes = false;
+            } else current += ch;
+        } else {
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') { result.push(current.trim()); current = ''; }
+            else current += ch;
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
+
+// ===== Auto categorize =====
+function autoCategory(merchant, rules) {
+    const m = merchant.toLowerCase();
+    for (const r of rules) {
+        if (m.includes(r.keyword.toLowerCase())) return r.category;
+    }
+    return null;
+}
+
+// ===== Column detection =====
+function detectColumns(headers) {
+    let colDate = null, colMerchant = null, colAmount = null;
+    for (const h of headers) {
+        const hs = h.toString();
+        if (!colDate && (hs.includes('利用日') || hs.includes('ご利用日') || hs === '日')) colDate = h;
+        else if (!colMerchant && (hs.includes('店名') || hs.includes('利用先') || hs.includes('摘要') || hs.includes('ご利用店名'))) colMerchant = h;
+        else if (!colAmount && (hs.includes('総額') || hs.includes('金額') || hs.includes('支払'))) colAmount = h;
+    }
+    if (headers.length >= 6) {
+        if (!colDate) colDate = headers[0];
+        if (!colMerchant) colMerchant = headers[2];
+        if (!colAmount) colAmount = headers[5];
+    } else {
+        if (!colDate) colDate = headers[0];
+        if (!colMerchant) colMerchant = headers[1];
+        if (!colAmount) colAmount = headers[2];
+    }
+    return { colDate, colMerchant, colAmount };
+}
+
+// ===== Helpers =====
+function fmt(n) { return '¥' + Number(n).toLocaleString(); }
+function getCompanyName(id, companies) { const c = companies.find(x => x.id === id); return c ? c.name : '不明'; }
+function getCardName(id, cards) { const c = cards.find(x => x.id === id); return c ? c.name : '不明'; }
+
+// ===== Navigation =====
+document.querySelectorAll('nav a').forEach(a => {
+    a.addEventListener('click', () => {
+        document.querySelectorAll('nav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + a.dataset.page).classList.add('active');
+        refreshPage(a.dataset.page);
+    });
+});
+
+function refreshPage(page) {
+    const data = getStore();
+    if (page === 'dashboard') renderDashboard(data);
+    else if (page === 'import') renderImportPage(data);
+    else if (page === 'expenses') renderExpenses(data);
+    else if (page === 'rules') renderRules(data);
+    else if (page === 'export') renderExport(data);
+}
+
+// ===== Dashboard =====
+function renderDashboard(data) {
+    // Populate filters
+    populateCompanySelect('dash-company-filter', data.companies);
+    const months = [...new Set(data.expenses.map(e => e.use_date ? e.use_date.substring(0,7) : ''))].filter(Boolean).sort().reverse();
+    const mf = document.getElementById('dash-month-filter');
+    mf.innerHTML = '<option value="all">すべての月</option>';
+    months.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; mf.appendChild(o); });
+
+    let filtered = data.expenses;
+    const cFilter = document.getElementById('dash-company-filter').value;
+    const mFilter = document.getElementById('dash-month-filter').value;
+    if (cFilter !== 'all') filtered = filtered.filter(e => e.company_id == cFilter);
+    if (mFilter !== 'all') filtered = filtered.filter(e => e.use_date && e.use_date.startsWith(mFilter));
+
+    // Stats
+    const total = filtered.reduce((s, e) => s + (e.amount || 0), 0);
+    const unconfirmed = filtered.filter(e => !e.is_confirmed);
+    const confirmed = filtered.filter(e => e.is_confirmed);
+    const grid = document.getElementById('stats-grid');
+    grid.innerHTML = `
+        <div class="stat-card"><div class="label">総経費</div><div class="value">${fmt(total)}</div><div class="sub">${filtered.length}件</div></div>
+        <div class="stat-card"><div class="label">未確認</div><div class="value" style="color:var(--accent-red)">${fmt(unconfirmed.reduce((s,e)=>s+(e.amount||0),0))}</div><div class="sub">${unconfirmed.length}件</div></div>
+        <div class="stat-card"><div class="label">確認済</div><div class="value" style="color:var(--accent-green)">${fmt(confirmed.reduce((s,e)=>s+(e.amount||0),0))}</div><div class="sub">${confirmed.length}件</div></div>
+        <div class="stat-card"><div class="label">登録会社</div><div class="value">${data.companies.length}</div><div class="sub">${data.cards.length}枚のカード</div></div>
+    `;
+
+    // Unconfirmed
+    const tbody = document.getElementById('unconfirmed-tbody');
+    const top10 = unconfirmed.sort((a,b) => (b.use_date||'').localeCompare(a.use_date||'')).slice(0, 10);
+    if (top10.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">未確認の経費はありません</td></tr>';
+    } else {
+        tbody.innerHTML = top10.map(e => `<tr>
+            <td>${e.use_date||''}</td>
+            <td>${e.merchant||''}</td>
+            <td class="amount">${fmt(e.amount)}</td>
+            <td>${getCardName(e.card_id, data.cards)}</td>
+            <td><span class="badge">${e.auto_category||'未分類'}</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="confirmExpense(${e.id})">確定</button></td>
+        </tr>`).join('');
+    }
+
+    // Monthly summary
+    const monthly = {};
+    filtered.forEach(e => {
+        const m = e.use_date ? e.use_date.substring(0,7) : '不明';
+        const c = getCompanyName(e.company_id, data.companies);
+        const key = m + '|' + c;
+        if (!monthly[key]) monthly[key] = { month: m, company: c, total: 0, count: 0 };
+        monthly[key].total += (e.amount || 0);
+        monthly[key].count++;
+    });
+    const mTbody = document.getElementById('monthly-tbody');
+    const sorted = Object.values(monthly).sort((a,b) => b.month.localeCompare(a.month));
+    mTbody.innerHTML = sorted.map(r => `<tr><td>${r.month}</td><td>${r.company}</td><td class="amount">${fmt(r.total)}</td><td>${r.count}件</td></tr>`).join('');
+}
+
+function confirmExpense(id) {
+    const data = getStore();
+    const e = data.expenses.find(x => x.id === id);
+    if (e) {
+        e.is_confirmed = 1;
+        if (!e.final_category) e.final_category = e.auto_category;
+        saveStore(data);
+        renderDashboard(data);
+    }
+}
+
+// ===== Import =====
+function renderImportPage(data) {
+    const cs = document.getElementById('import-company');
+    cs.innerHTML = data.companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    filterCards();
+}
+
+function filterCards() {
+    const data = getStore();
+    const compId = parseInt(document.getElementById('import-company').value);
+    const cs = document.getElementById('import-card');
+    const filtered = data.cards.filter(c => c.company_id === compId);
+    cs.innerHTML = filtered.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+document.getElementById('import-company').addEventListener('change', filterCards);
+
+// File input
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileNameDisplay = document.getElementById('file-name-display');
+let selectedFile = null;
+
+['dragenter','dragover','dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }));
+['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.add('dragover')));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.remove('dragover')));
+
+dropZone.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length > 0) {
+        selectedFile = e.dataTransfer.files[0];
+        fileNameDisplay.textContent = selectedFile.name;
+        fileNameDisplay.style.color = 'var(--primary-color)';
+        fileNameDisplay.style.fontWeight = 'bold';
+    }
+});
+
+fileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+        selectedFile = this.files[0];
+        fileNameDisplay.textContent = selectedFile.name;
+        fileNameDisplay.style.color = 'var(--primary-color)';
+        fileNameDisplay.style.fontWeight = 'bold';
+    }
+});
+
+document.getElementById('btn-import').addEventListener('click', () => {
+    if (!selectedFile) { showAlert('import-alert', 'ファイルを選択してください', 'error'); return; }
+    const companyId = parseInt(document.getElementById('import-company').value);
+    const cardId = parseInt(document.getElementById('import-card').value);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        let text = e.target.result;
+        // Try to detect encoding issues - if we see garbled text, try Shift_JIS
+        try {
+            importCSVData(text, companyId, cardId);
+        } catch(err) {
+            showAlert('import-alert', 'CSVの読み込みに失敗: ' + err.message, 'error');
+        }
+    };
+    // Try UTF-8 first, then Shift_JIS
+    reader.readAsText(selectedFile, 'UTF-8');
+});
+
+function importCSVData(text, companyId, cardId) {
+    const rows = parseCSV(text);
+    if (rows.length === 0) { showAlert('import-alert', 'CSVにデータがありません', 'error'); return; }
+
+    const headers = Object.keys(rows[0]);
+    const { colDate, colMerchant, colAmount } = detectColumns(headers);
+
+    const data = getStore();
+    let count = 0;
+
+    rows.forEach(row => {
+        const dateVal = row[colDate];
+        const amountVal = row[colAmount];
+        if (!dateVal || !amountVal) return;
+
+        const useDate = dateVal.trim().replace(/\//g, '-');
+        const merchant = row[colMerchant] ? row[colMerchant].trim() : '不明';
+        const amountStr = amountVal.toString().replace(/,/g, '').trim();
+        const amount = parseInt(parseFloat(amountStr));
+        if (isNaN(amount)) return;
+
+        const cat = autoCategory(merchant, data.rules);
+
+        data.expenses.push({
+            id: data.nextExpenseId++,
+            use_date: useDate,
+            merchant: merchant,
+            amount: amount,
+            card_id: cardId,
+            company_id: companyId,
+            auto_category: cat,
+            final_category: null,
+            is_confirmed: 0,
+            memo: ''
+        });
+        count++;
+    });
+
+    saveStore(data);
+    showAlert('import-alert', `${selectedFile.name} から ${count}件の明細を読み込み、自動仕訳を実行しました！`, 'success');
+    selectedFile = null;
+    fileNameDisplay.textContent = 'ここにCSVをドロップ or クリックして選択';
+    fileNameDisplay.style.color = 'var(--text-muted)';
+    fileNameDisplay.style.fontWeight = 'normal';
+    fileInput.value = '';
+}
+
+// Also try Shift_JIS if UTF-8 seems wrong
+document.getElementById('btn-import').addEventListener('click', function handleShiftJIS() {
+    // This is handled by the main click handler above
+}, { once: false });
+
+function showAlert(containerId, msg, type) {
+    document.getElementById(containerId).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    setTimeout(() => { document.getElementById(containerId).innerHTML = ''; }, 5000);
+}
+
+// ===== Expenses List =====
+let expPage = 1;
+const PER_PAGE = 50;
+
+function renderExpenses(data) {
+    populateCompanySelect('expense-company-filter', data.companies);
+    populateCategorySelect('expense-category-filter', data);
+
+    let filtered = [...data.expenses];
+    const search = document.getElementById('expense-search').value.toLowerCase();
+    const compF = document.getElementById('expense-company-filter').value;
+    const catF = document.getElementById('expense-category-filter').value;
+    const statF = document.getElementById('expense-status-filter').value;
+
+    if (search) filtered = filtered.filter(e => (e.merchant||'').toLowerCase().includes(search));
+    if (compF !== 'all') filtered = filtered.filter(e => e.company_id == compF);
+    if (catF !== 'all') filtered = filtered.filter(e => (e.final_category || e.auto_category) === catF);
+    if (statF !== 'all') filtered = filtered.filter(e => (statF === '1' ? e.is_confirmed : !e.is_confirmed));
+
+    filtered.sort((a,b) => (b.use_date||'').localeCompare(a.use_date||''));
+
+    const totalPages = Math.ceil(filtered.length / PER_PAGE) || 1;
+    if (expPage > totalPages) expPage = totalPages;
+    const start = (expPage - 1) * PER_PAGE;
+    const pageData = filtered.slice(start, start + PER_PAGE);
+
+    const tbody = document.getElementById('expenses-tbody');
+    tbody.innerHTML = pageData.map(e => {
+        const cat = e.final_category || e.auto_category || '未分類';
+        const status = e.is_confirmed ? '<span class="badge badge-confirmed">確認済</span>' : '<span class="badge badge-unconfirmed">未確認</span>';
+        return `<tr>
+            <td>${e.use_date||''}</td>
+            <td>${e.merchant||''}</td>
+            <td class="amount">${fmt(e.amount)}</td>
+            <td>${getCompanyName(e.company_id, data.companies)}</td>
+            <td>${getCardName(e.card_id, data.cards)}</td>
+            <td><span class="badge">${cat}</span></td>
+            <td>${status}</td>
+            <td>
+                ${!e.is_confirmed ? `<button class="btn btn-primary btn-sm" onclick="confirmExpense(${e.id});renderExpenses(getStore());">確定</button>` : ''}
+                <button class="btn btn-danger btn-sm" onclick="deleteExpense(${e.id})">削除</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // Pagination
+    const pag = document.getElementById('expenses-pagination');
+    pag.innerHTML = `
+        <button ${expPage<=1?'disabled':''} onclick="expPage=1;renderExpenses(getStore());">≪</button>
+        <button ${expPage<=1?'disabled':''} onclick="expPage--;renderExpenses(getStore());">＜</button>
+        <span style="color:var(--text-muted);">${expPage} / ${totalPages} (${filtered.length}件)</span>
+        <button ${expPage>=totalPages?'disabled':''} onclick="expPage++;renderExpenses(getStore());">＞</button>
+        <button ${expPage>=totalPages?'disabled':''} onclick="expPage=${totalPages};renderExpenses(getStore());">≫</button>
+    `;
+}
+
+function deleteExpense(id) {
+    if (!confirm('この経費を削除しますか？')) return;
+    const data = getStore();
+    data.expenses = data.expenses.filter(e => e.id !== id);
+    saveStore(data);
+    renderExpenses(data);
+}
+
+['expense-search','expense-company-filter','expense-category-filter','expense-status-filter'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { expPage = 1; renderExpenses(getStore()); });
+    document.getElementById(id).addEventListener('change', () => { expPage = 1; renderExpenses(getStore()); });
+});
+
+// ===== Rules =====
+function renderRules(data) {
+    const search = document.getElementById('rule-search').value.toLowerCase();
+    let filtered = data.rules;
+    if (search) filtered = filtered.filter(r => r.keyword.toLowerCase().includes(search) || r.category.toLowerCase().includes(search));
+
+    document.getElementById('rule-count').textContent = data.rules.length;
+    const tbody = document.getElementById('rules-tbody');
+    tbody.innerHTML = filtered.map((r, i) => `<tr>
+        <td>${r.keyword}</td>
+        <td><span class="badge">${r.category}</span></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteRule(${data.rules.indexOf(r)})">削除</button></td>
+    </tr>`).join('');
+
+    // Category datalist
+    const cats = [...new Set(data.rules.map(r => r.category))].sort();
+    document.getElementById('category-list').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+}
+
+document.getElementById('btn-add-rule').addEventListener('click', () => {
+    const kw = document.getElementById('rule-keyword').value.trim();
+    const cat = document.getElementById('rule-category').value.trim();
+    if (!kw || !cat) return;
+    const data = getStore();
+    data.rules.push({ keyword: kw, category: cat });
+    saveStore(data);
+    document.getElementById('rule-keyword').value = '';
+    document.getElementById('rule-category').value = '';
+    renderRules(data);
+});
+
+document.getElementById('rule-search').addEventListener('input', () => renderRules(getStore()));
+
+function deleteRule(index) {
+    const data = getStore();
+    data.rules.splice(index, 1);
+    saveStore(data);
+    renderRules(data);
+}
+
+// ===== Export =====
+function renderExport(data) {
+    populateCompanySelect('export-company', data.companies);
+    const months = [...new Set(data.expenses.map(e => e.use_date ? e.use_date.substring(0,7) : ''))].filter(Boolean).sort().reverse();
+    const ms = document.getElementById('export-month');
+    ms.innerHTML = '<option value="all">すべて</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+function getFilteredForExport() {
+    const data = getStore();
+    let filtered = [...data.expenses];
+    const comp = document.getElementById('export-company').value;
+    const month = document.getElementById('export-month').value;
+    const stat = document.getElementById('export-status').value;
+    if (comp !== 'all') filtered = filtered.filter(e => e.company_id == comp);
+    if (month !== 'all') filtered = filtered.filter(e => e.use_date && e.use_date.startsWith(month));
+    if (stat !== 'all') filtered = filtered.filter(e => stat === '1' ? e.is_confirmed : !e.is_confirmed);
+    return { data, filtered };
+}
+
+document.getElementById('btn-export-csv').addEventListener('click', () => {
+    const { data, filtered } = getFilteredForExport();
+    const header = '日付,利用先,金額,会社,カード,勘定科目,確認状態,メモ';
+    const rows = filtered.map(e => {
+        const cat = e.final_category || e.auto_category || '';
+        return [e.use_date, `"${(e.merchant||'').replace(/"/g,'""')}"`, e.amount, getCompanyName(e.company_id,data.companies), getCardName(e.card_id,data.cards), cat, e.is_confirmed?'確認済':'未確認', `"${(e.memo||'').replace(/"/g,'""')}"`].join(',');
+    });
+    downloadCSV(header + '\n' + rows.join('\n'), '経費一覧_' + new Date().toISOString().slice(0,10) + '.csv');
+});
+
+document.getElementById('btn-export-summary').addEventListener('click', () => {
+    const { data, filtered } = getFilteredForExport();
+    const summary = {};
+    filtered.forEach(e => {
+        const m = e.use_date ? e.use_date.substring(0,7) : '不明';
+        const cat = e.final_category || e.auto_category || '未分類';
+        const key = m + '|' + cat;
+        if (!summary[key]) summary[key] = { month: m, category: cat, total: 0, count: 0 };
+        summary[key].total += (e.amount||0);
+        summary[key].count++;
+    });
+    const header = '月,勘定科目,合計金額,件数';
+    const rows = Object.values(summary).sort((a,b) => a.month.localeCompare(b.month) || a.category.localeCompare(b.category))
+        .map(r => [r.month, r.category, r.total, r.count].join(','));
+    downloadCSV(header + '\n' + rows.join('\n'), '月別サマリー_' + new Date().toISOString().slice(0,10) + '.csv');
+});
+
+function downloadCSV(content, filename) {
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + content], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+}
+
+// ===== Backup/Restore =====
+document.getElementById('btn-backup').addEventListener('click', () => {
+    const data = getStore();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'keiri_backup_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+});
+
+document.getElementById('btn-restore').addEventListener('click', () => {
+    document.getElementById('restore-input').click();
+});
+
+document.getElementById('restore-input').addEventListener('change', function() {
+    if (!this.files.length) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.companies && data.expenses) {
+                saveStore(data);
+                alert('リストア完了！');
+                refreshPage('dashboard');
+            } else {
+                alert('無効なバックアップファイルです');
+            }
+        } catch(err) { alert('ファイルの読み込みに失敗: ' + err.message); }
+    };
+    reader.readAsText(this.files[0]);
+});
+
+document.getElementById('btn-clear-data').addEventListener('click', () => {
+    if (!confirm('全データを削除しますか？（ルールは残ります）')) return;
+    if (!confirm('本当に削除しますか？この操作は取り消せません。')) return;
+    const data = getStore();
+    data.expenses = [];
+    data.nextExpenseId = 1;
+    saveStore(data);
+    alert('全経費データを削除しました');
+    refreshPage('dashboard');
+});
+
+// ===== Helpers =====
+function populateCompanySelect(selectId, companies) {
+    const sel = document.getElementById(selectId);
+    const val = sel.value;
+    const base = sel.querySelector('option[value="all"]');
+    sel.innerHTML = '';
+    if (base) sel.appendChild(base);
+    else { const o = document.createElement('option'); o.value = 'all'; o.textContent = 'すべての会社'; sel.appendChild(o); }
+    companies.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; sel.appendChild(o); });
+    sel.value = val || 'all';
+}
+
+function populateCategorySelect(selectId, data) {
+    const sel = document.getElementById(selectId);
+    const val = sel.value;
+    const cats = [...new Set(data.expenses.map(e => e.final_category || e.auto_category).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="all">すべての科目</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    sel.value = val || 'all';
+}
+
+// Dashboard filter events
+document.getElementById('dash-company-filter').addEventListener('change', () => renderDashboard(getStore()));
+document.getElementById('dash-month-filter').addEventListener('change', () => renderDashboard(getStore()));
+
+// ===== Init =====
+renderDashboard(getStore());
+</script>
+</body>
+</html>
