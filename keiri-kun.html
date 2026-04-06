@@ -319,7 +319,7 @@ function initDefaultData() {
             {id:8, name:'Amazonマスターカード', company_id:5}
         ],
         rules: DEFAULT_RULES,
-        expenses: (typeof PRELOADED_EXPENSES !== 'undefined') ? PRELOADED_EXPENSES : [],
+        expenses: (typeof PRELOADED_EXPENSES !== 'undefined') ? PRELOADED_EXPENSES.filter(e => e.use_date && e.amount) : [],
         nextExpenseId: (typeof PRELOADED_NEXT_ID !== 'undefined') ? PRELOADED_NEXT_ID : 1
     };
     saveStore(data);
@@ -424,12 +424,20 @@ function refreshPage(page) {
 
 // ===== Dashboard =====
 function renderDashboard(data) {
+    // Save current filter values before re-populating
+    const savedCompany = document.getElementById('dash-company-filter').value;
+    const savedMonth = document.getElementById('dash-month-filter').value;
+
     // Populate filters
     populateCompanySelect('dash-company-filter', data.companies);
     const months = [...new Set(data.expenses.map(e => e.use_date ? e.use_date.substring(0,7) : ''))].filter(Boolean).sort().reverse();
     const mf = document.getElementById('dash-month-filter');
     mf.innerHTML = '<option value="all">すべての月</option>';
     months.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; mf.appendChild(o); });
+
+    // Restore saved filter values
+    if (savedCompany) document.getElementById('dash-company-filter').value = savedCompany;
+    if (savedMonth) mf.value = savedMonth;
 
     let filtered = data.expenses;
     const cFilter = document.getElementById('dash-company-filter').value;
