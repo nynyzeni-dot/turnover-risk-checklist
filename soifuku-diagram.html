@@ -10,8 +10,9 @@
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0f0f1a; font-family: 'Noto Sans JP', 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px; gap: 24px; overflow-x: hidden; }
+
   .toolbar { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 12px 24px; border-radius: 16px; }
-  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); margin-right: 4px; }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); }
   .btn-download { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border: none; border-radius: 12px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
   .btn-download:hover { transform: translateY(-1px); }
   .btn-download:active { transform: translateY(0); }
@@ -23,102 +24,140 @@
   .btn-download.loading .spinner { display: block; }
   .btn-download.loading .btn-icon { display: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #1e1b4b; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 13px; font-weight: 700; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; display: flex; align-items: center; gap: 8px; }
+
+  .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #1e1b4b; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 13px; font-weight: 700; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); z-index: 100; display: flex; align-items: center; gap: 8px; }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast svg { width: 18px; height: 18px; fill: none; stroke: #34d399; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
   .diagram-card { width: 880px; max-width: 100%; background: #ffffff; border-radius: 24px; overflow: hidden; }
-  .diagram-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); color: #fff; padding: 48px 48px 44px; text-align: center; position: relative; overflow: hidden; }
+
+  /* ヘッダー */
+  .diagram-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); color: #fff; padding: 44px 48px 40px; text-align: center; position: relative; overflow: hidden; }
   .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
   .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255,255,255,0.08); }
   .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(255,255,255,0.06); }
-  .header-tag { display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 18px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; position: relative; z-index: 1; }
-  .diagram-header h1 { font-size: 28px; font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; position: relative; z-index: 1; }
-  .diagram-header .subtitle { font-size: 14px; color: rgba(255,255,255,0.8); position: relative; z-index: 1; }
-  .diagram-body { padding: 44px 44px 40px; }
-  .section-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: #a78bfa; margin-bottom: 22px; }
+  .header-tag { display: inline-block; background: rgba(255,255,255,0.2); padding: 5px 16px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; position: relative; z-index: 1; }
+  .diagram-header h1 { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; margin-bottom: 8px; position: relative; z-index: 1; }
+  .diagram-header .subtitle { font-size: 13px; color: rgba(255,255,255,0.8); position: relative; z-index: 1; }
+
+  /* ボディ */
+  .diagram-body { padding: 40px 44px 36px; }
+  .section-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: #a78bfa; margin-bottom: 18px; }
+
+  /* フロー */
   .flow { display: flex; align-items: stretch; margin-bottom: 8px; }
-  .flow-step { flex: 1; text-align: center; padding: 28px 16px; border-radius: 18px; position: relative; }
-  .flow-step .step-number { position: absolute; top: 10px; left: 14px; font-size: 11px; font-weight: 800; color: #d1d5db; }
-  .flow-step .icon-wrap { width: 80px; height: 80px; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
-  .flow-step .icon-wrap svg { width: 40px; height: 40px; }
-  .icon-red { background: #fee2e2; }
-  .icon-red svg { fill: #dc2626; }
-  .icon-amber { background: #fef3c7; }
-  .icon-amber svg { fill: #d97706; }
-  .icon-green { background: #d1fae5; }
-  .icon-green svg { fill: #059669; }
-  .flow-step h3 { font-size: 16px; font-weight: 800; color: #1e1b4b; margin-bottom: 10px; line-height: 1.4; }
-  .flow-step p { font-size: 12.5px; color: #6b7280; line-height: 1.7; }
+  .flow-step { flex: 1; text-align: center; padding: 24px 14px 20px; border-radius: 18px; position: relative; background: #fafafa; }
+  .flow-step .step-number { position: absolute; top: 10px; left: 12px; font-size: 10px; font-weight: 800; color: #d1d5db; }
+  .flow-step .icon-wrap { width: 68px; height: 68px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .flow-step .icon-wrap svg { width: 34px; height: 34px; }
+  .icon-red { background: #fee2e2; } .icon-red svg { fill: #dc2626; }
+  .icon-amber { background: #fef3c7; } .icon-amber svg { fill: #d97706; }
+  .icon-green { background: #d1fae5; } .icon-green svg { fill: #059669; }
+  .flow-step h3 { font-size: 14px; font-weight: 800; color: #1e1b4b; margin-bottom: 8px; line-height: 1.4; }
+  .flow-step p { font-size: 11.5px; color: #6b7280; line-height: 1.65; margin-bottom: 10px; }
   .kw-red { color: #dc2626; font-weight: 700; }
   .kw-amber { color: #d97706; font-weight: 700; }
   .kw-green { color: #059669; font-weight: 700; }
-  .flow-arrow { display: flex; align-items: center; justify-content: center; width: 48px; flex-shrink: 0; }
-  .flow-arrow .arrow-icon { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; }
-  .flow-arrow .arrow-icon svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-  .connector { text-align: center; padding: 16px 0 32px; position: relative; }
-  .connector-line-top, .connector-line-bottom { position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 14px; background: #a78bfa; }
-  .connector-line-top { top: 0; }
-  .connector-line-bottom { bottom: 4px; }
+
+  /* フロー内タグ */
+  .step-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 6px; }
+  .step-tag { font-size: 9.5px; font-weight: 700; padding: 3px 9px; border-radius: 8px; }
+  .tag-red { background: #fee2e2; color: #dc2626; }
+  .tag-amber { background: #fef3c7; color: #d97706; }
+  .tag-green { background: #d1fae5; color: #059669; }
+
+  .flow-arrow { display: flex; align-items: center; justify-content: center; width: 44px; flex-shrink: 0; }
+  .flow-arrow .arrow-icon { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; }
+  .flow-arrow .arrow-icon svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* フレームワーク帯 */
+  .framework-band { display: flex; gap: 10px; margin: 20px 0 28px; }
+  .fw-card { flex: 1; background: #f5f3ff; border: 1.5px solid #ddd6fe; border-radius: 14px; padding: 14px 12px; text-align: center; }
+  .fw-card .fw-title { font-size: 10px; font-weight: 800; color: #6d28d9; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .fw-card .fw-body { font-size: 11px; color: #4c1d95; line-height: 1.5; font-weight: 600; }
+  .fw-card .fw-note { font-size: 10px; color: #7c3aed; margin-top: 4px; font-weight: 700; }
+
+  /* コネクタ */
+  .connector { text-align: center; padding: 0 0 28px; position: relative; }
+  .connector-line-bottom { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 14px; background: #a78bfa; }
   .connector .connector-badge { display: inline-flex; align-items: center; gap: 8px; background: #f5f3ff; border: 1.5px solid #ddd6fe; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 700; color: #6d28d9; }
   .connector .connector-badge svg { width: 16px; height: 16px; fill: none; stroke: #7c3aed; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .comparison { display: flex; gap: 20px; align-items: stretch; }
-  .comparison-box { flex: 1; border-radius: 20px; padding: 32px 24px; text-align: center; position: relative; overflow: hidden; }
+
+  /* 比較 */
+  .comparison { display: flex; gap: 16px; align-items: stretch; }
+  .comparison-box { flex: 1; border-radius: 18px; padding: 26px 20px; text-align: center; position: relative; overflow: hidden; }
   .comparison-box.before { background: #fee2e2; border: 2px solid #fecaca; }
   .comparison-box.after { background: #d1fae5; border: 2px solid #a7f3d0; }
   .comparison-deco { position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; pointer-events: none; }
   .before .comparison-deco { background: rgba(239,68,68,0.08); }
   .after .comparison-deco { background: rgba(16,185,129,0.08); }
-  .comparison-box .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 14px; position: relative; z-index: 1; }
+  .comparison-box .label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; position: relative; z-index: 1; }
   .comparison-box.before .label { color: #ef4444; }
   .comparison-box.after .label { color: #059669; }
-  .comparison-box .big-number { font-size: 52px; font-weight: 900; margin-bottom: 2px; position: relative; z-index: 1; line-height: 1.1; }
+  .comparison-box .big-number { font-size: 44px; font-weight: 900; margin-bottom: 4px; position: relative; z-index: 1; line-height: 1.1; }
   .comparison-box.before .big-number { color: #dc2626; }
   .comparison-box.after .big-number { color: #059669; }
-  .comparison-box .desc { font-size: 12.5px; color: #6b7280; position: relative; z-index: 1; margin-bottom: 12px; }
-  .desc-steps { display: flex; justify-content: center; gap: 6px; position: relative; z-index: 1; margin-bottom: 16px; flex-wrap: wrap; }
-  .step-pill { font-size: 10px; padding: 4px 10px; border-radius: 10px; font-weight: 600; }
+  .comparison-box .desc { font-size: 11.5px; color: #6b7280; position: relative; z-index: 1; margin-bottom: 10px; line-height: 1.5; }
+  .desc-steps { display: flex; justify-content: center; gap: 5px; position: relative; z-index: 1; margin-bottom: 12px; flex-wrap: wrap; }
+  .step-pill { font-size: 9.5px; padding: 3px 9px; border-radius: 8px; font-weight: 700; }
   .before .step-pill { background: rgba(239,68,68,0.15); color: #dc2626; }
   .after .step-pill { background: rgba(16,185,129,0.15); color: #059669; }
-  .progress-bar-wrap { position: relative; z-index: 1; height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; margin: 0 12px; }
+  .progress-bar-wrap { position: relative; z-index: 1; height: 7px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; margin: 0 8px; }
   .progress-bar-fill { height: 100%; border-radius: 4px; }
-  .before .progress-bar-fill { width: 25%; background: #ef4444; }
+  .before .progress-bar-fill { width: 22%; background: #ef4444; }
   .after .progress-bar-fill { width: 90%; background: #10b981; }
   .vs-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: 8px; }
-  .vs-badge { width: 44px; height: 44px; border-radius: 50%; background: #1e1b4b; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; letter-spacing: 1px; }
-  .speed-badge { background: #7c3aed; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 12px; white-space: nowrap; }
-  .bottom-cta { margin-top: 36px; text-align: center; padding: 32px 28px; background: #1e1b4b; border-radius: 20px; position: relative; overflow: hidden; }
+  .vs-badge { width: 40px; height: 40px; border-radius: 50%; background: #1e1b4b; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 900; }
+  .speed-badge { background: #7c3aed; color: #fff; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 10px; white-space: nowrap; text-align: center; line-height: 1.4; }
+
+  /* キーポイント */
+  .keypoints { margin-top: 20px; background: #f8fafc; border-radius: 18px; padding: 24px 22px; border: 1.5px solid #e2e8f0; }
+  .keypoints-title { font-size: 10px; font-weight: 800; letter-spacing: 3px; color: #a78bfa; text-transform: uppercase; margin-bottom: 14px; }
+  .kp-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+  .kp-item { flex: 1; min-width: 160px; background: #fff; border-radius: 12px; padding: 13px 14px; border: 1.5px solid #e9ecef; }
+  .kp-item .kp-label { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #a78bfa; margin-bottom: 5px; }
+  .kp-item .kp-text { font-size: 11.5px; font-weight: 700; color: #1e1b4b; line-height: 1.5; }
+  .kp-item .kp-sub { font-size: 10.5px; color: #6b7280; margin-top: 3px; line-height: 1.4; }
+
+  /* CTA */
+  .bottom-cta { margin-top: 20px; text-align: center; padding: 28px 24px; background: #1e1b4b; border-radius: 18px; position: relative; overflow: hidden; }
   .cta-deco-1 { position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(167,139,250,0.12); pointer-events: none; }
   .cta-deco-2 { position: absolute; bottom: -40px; left: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(240,147,251,0.08); pointer-events: none; }
-  .bottom-cta .cta-icon { width: 48px; height: 48px; margin: 0 auto 14px; background: rgba(255,255,255,0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
-  .bottom-cta .cta-icon svg { width: 26px; height: 26px; fill: none; stroke: #a78bfa; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .bottom-cta .cta-text { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 8px; position: relative; z-index: 1; }
-  .bottom-cta .cta-headline { font-size: 22px; font-weight: 900; color: #c4b5fd; line-height: 1.5; position: relative; z-index: 1; }
-  .diagram-footer { padding: 16px 44px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+  .bottom-cta .cta-icon { width: 44px; height: 44px; margin: 0 auto 12px; background: rgba(255,255,255,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .bottom-cta .cta-icon svg { width: 24px; height: 24px; fill: none; stroke: #a78bfa; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .bottom-cta .cta-text { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 6px; position: relative; z-index: 1; }
+  .bottom-cta .cta-headline { font-size: 20px; font-weight: 900; color: #c4b5fd; line-height: 1.5; position: relative; z-index: 1; }
+
+  /* フッター */
+  .diagram-footer { padding: 14px 44px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
   .diagram-footer small { font-size: 10px; color: #d1d5db; }
   .diagram-footer .dots { display: flex; gap: 4px; }
   .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
   .diagram-footer .dots span:first-child { background: #a78bfa; }
+
   @media (max-width: 600px) {
-    body { padding: 16px 8px; }
+    body { padding: 12px 8px; }
     .diagram-body { padding: 24px 16px 20px; }
-    .diagram-header { padding: 32px 20px 28px; }
-    .diagram-header h1 { font-size: 1.3rem; }
-    .diagram-header .subtitle { font-size: 0.8rem; }
+    .diagram-header { padding: 28px 16px; }
+    .diagram-header h1 { font-size: 1.2rem; }
     .flow { flex-direction: column; gap: 8px; }
-    .flow-arrow { transform: rotate(90deg); width: 100%; height: 40px; }
+    .flow-arrow { transform: rotate(90deg); width: 100%; height: 36px; }
     .comparison { flex-direction: column; }
     .vs-divider { flex-direction: row; padding: 8px 0; }
-    .big-number { font-size: 36px !important; }
-    .bottom-cta .cta-headline { font-size: 1.1rem; }
+    .big-number { font-size: 32px !important; }
+    .framework-band { flex-direction: column; }
+    .kp-grid { flex-direction: column; }
   }
 </style>
 </head>
 <body>
+
 <div class="toast" id="toast">
   <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
   <span id="toast-text"></span>
 </div>
-<div class="toolbar" id="toolbar">
+
+<div class="toolbar">
   <span class="toolbar-label">ダウンロード:</span>
   <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
     <span class="spinner"></span>
@@ -131,102 +170,184 @@
     <span class="btn-text">PDF</span>
   </button>
 </div>
+
 <div class="diagram-card" id="capture">
+
   <div class="diagram-header">
     <div class="deco-circle header-deco-1"></div>
     <div class="deco-circle header-deco-2"></div>
-    <div class="header-tag">Visual Thinking</div>
+    <div class="header-tag">部下の育成と離職の防止③ ｜ ソイフク様</div>
     <h1>スタッフが自ら動く組織の作り方</h1>
     <p class="subtitle">先に自分を変える × 承認の文化 × 内発的動機への転換</p>
   </div>
+
   <div class="diagram-body">
+
     <div class="section-label">Problem → Solution</div>
+
     <div class="flow">
+      <!-- Step 1 -->
       <div class="flow-step">
         <span class="step-number">01</span>
         <div class="icon-wrap icon-red">
           <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
         <h3>褒めない職場が<br>生む悪循環</h3>
-        <p>外発的動機（報酬・強制）だけでは続かない。<span class="kw-red">本音を話せない</span>スタッフは離職理由を嘘でごまかし、静かに去っていく</p>
+        <p>外発的動機（報酬・強制）だけでは長続きしない。<span class="kw-red">半数近くが面談で本音を話さない</span>。見返りを求めた瞬間、同機付けは崩れる</p>
+        <div class="step-tags">
+          <span class="step-tag tag-red">外発的動機</span>
+          <span class="step-tag tag-red">育成疲れ</span>
+          <span class="step-tag tag-red">本音が出ない</span>
+        </div>
       </div>
+
       <div class="flow-arrow"><div class="arrow-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+
+      <!-- Step 2 -->
       <div class="flow-step">
         <span class="step-number">02</span>
         <div class="icon-wrap icon-amber">
           <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </div>
-        <h3>育成疲れと<br>人間的信頼の喪失</h3>
-        <p><span class="kw-amber">一貫性のなさ</span>と見返りを求める姿勢が信頼を壊す。育成疲れで諦めると上司自身の未来の選択肢を狭める</p>
+        <h3>人間的信頼の喪失が<br>全てを止める</h3>
+        <p>能力的信頼だけでは不十分。<span class="kw-amber">一貫性のなさ</span>・利己的態度・ドライな関係が信頼を壊す。ERG理論：3つの欲求を同時に満たさないと離職リスクが高まる</p>
+        <div class="step-tags">
+          <span class="step-tag tag-amber">人間的信頼</span>
+          <span class="step-tag tag-amber">ERG理論</span>
+          <span class="step-tag tag-amber">一貫性</span>
+        </div>
       </div>
+
       <div class="flow-arrow"><div class="arrow-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+
+      <!-- Step 3 -->
       <div class="flow-step">
         <span class="step-number">03</span>
         <div class="icon-wrap icon-green">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         </div>
-        <h3>先に自分を変える＋<br>毎日のストローク</h3>
-        <p>感じ方は変えられなくても<span class="kw-green">出し方は変えられる</span>。過程を褒め続ければ外発的動機が内発的動機へ転換する</p>
+        <h3>先に自分を変える＋<br>ストロークの習慣化</h3>
+        <p>感じ方は変えられなくても<span class="kw-green">出し方は変えられる</span>。過程を褒め続ける→成功体験→エンハンシング効果で内発的動機へ転換。結果より過程を3倍褒める</p>
+        <div class="step-tags">
+          <span class="step-tag tag-green">エンハンシング効果</span>
+          <span class="step-tag tag-green">ストローク</span>
+          <span class="step-tag tag-green">過程を褒める</span>
+        </div>
       </div>
     </div>
+
+    <!-- フレームワーク帯 -->
+    <div class="framework-band">
+      <div class="fw-card">
+        <div class="fw-title">母性 × 父性のバランス</div>
+        <div class="fw-body">上司⇔部下 = 4:1<br>（褒め4 : 叱り1）</div>
+        <div class="fw-note">叱る時はプライドを傷つけない</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-title">ドーパミン活用マネジメント</div>
+        <div class="fw-body">褒め・感謝・目標設定<br>新たな経験で分泌</div>
+        <div class="fw-note">同ポジション3年超は危険サイン</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-title">ERG理論 3つの欲求</div>
+        <div class="fw-body">生存欲求 → 関係欲求<br>→ 成長欲求を順に満たす</div>
+        <div class="fw-note">1つでも欠けると離職動機になる</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-title">安田隆夫の3リーダーシップ</div>
+        <div class="fw-body">共感能力 / 感謝の心<br>お願いの力</div>
+        <div class="fw-note">35年連続増収増益の根拠</div>
+      </div>
+    </div>
+
     <div class="connector">
-      <div class="connector-line-top"></div>
       <div class="connector-badge">
         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
         じゃあ、何が具体的に変わるのか？
       </div>
       <div class="connector-line-bottom"></div>
     </div>
+
     <div class="section-label">Before vs After</div>
+
     <div class="comparison">
       <div class="comparison-box before">
         <div class="comparison-deco"></div>
-        <div class="label">不正型マネジメント</div>
+        <div class="label">父性偏重マネジメント</div>
         <div class="big-number">離職続</div>
-        <div class="desc">命令・叱責中心で信頼が築けない状態</div>
+        <div class="desc">命令・叱責中心→信頼が築けない<br>本音が出ない→離職理由が嘘になる</div>
         <div class="desc-steps">
-          <span class="step-pill">命令</span>
-          <span class="step-pill">叱責</span>
-          <span class="step-pill">距離感</span>
+          <span class="step-pill">命令・強制</span>
+          <span class="step-pill">叱責中心</span>
+          <span class="step-pill">見返りを求める</span>
         </div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
       </div>
+
       <div class="vs-divider">
         <div class="vs-badge">VS</div>
-        <div class="speed-badge">紹介採用へ</div>
+        <div class="speed-badge">紹介採用<br>が生まれる</div>
       </div>
+
       <div class="comparison-box after">
         <div class="comparison-deco"></div>
-        <div class="label">承認×母性型マネジメント</div>
+        <div class="label">母性×父性バランス型</div>
         <div class="big-number">離職0</div>
-        <div class="desc">ストローク習慣が心理的安全性を育む</div>
+        <div class="desc">ストローク文化→心理的安全性<br>褒めの文化が2年目→1年目へ伝播</div>
         <div class="desc-steps">
-          <span class="step-pill">ストローク</span>
-          <span class="step-pill">褒め</span>
-          <span class="step-pill">共感</span>
+          <span class="step-pill">毎日ストローク</span>
+          <span class="step-pill">過程を褒める</span>
+          <span class="step-pill">目標は本人が設定</span>
         </div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
       </div>
     </div>
+
+    <!-- キーポイント -->
+    <div class="keypoints">
+      <div class="keypoints-title">Key Insights</div>
+      <div class="kp-grid">
+        <div class="kp-item">
+          <div class="kp-label">心理的安全性とは</div>
+          <div class="kp-text">甘やかしではない</div>
+          <div class="kp-sub">どんな意見でも一旦受け取ってもらえる環境。これが紹介採用につながる</div>
+        </div>
+        <div class="kp-item">
+          <div class="kp-label">学習値 vs 体験値</div>
+          <div class="kp-text">聞いただけでは意味がない</div>
+          <div class="kp-sub">1つ実践して成功体験を得ることで初めて腹落ちし長期記憶になる</div>
+        </div>
+        <div class="kp-item">
+          <div class="kp-label">器の広げ方</div>
+          <div class="kp-text">合わない人が最高の先生</div>
+          <div class="kp-sub">苦手なタイプと向き合えた人だけが、その後同じタイプを全員育てられる</div>
+        </div>
+      </div>
+    </div>
+
     <div class="bottom-cta">
       <div class="cta-deco-1"></div>
       <div class="cta-deco-2"></div>
       <div class="cta-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-      <div class="cta-text">部下の育成と離職の防止③ ｜ ソイフク様 2026.05.07</div>
+      <div class="cta-text">今日からの一歩 ｜ 宿題：今日の学びから1つ実践して3週間以内に提出</div>
       <div class="cta-headline">自分と向き合えた人だけが、人を導ける</div>
     </div>
+
   </div>
+
   <div class="diagram-footer">
-    <small>Generated by AI Diagram Tool</small>
+    <small>部下の育成と離職の防止③ ｜ ソイフク様 2026.05.07</small>
     <div class="dots"><span></span><span></span><span></span></div>
   </div>
+
 </div>
+
 <script>
 function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toast-text').textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
 function setLoading(id, on) { const b = document.getElementById(id); b.classList.toggle('loading', on); b.disabled = on; }
 async function captureCard() { return await html2canvas(document.getElementById('capture'), { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false }); }
-async function downloadPNG() { setLoading('btn-png', true); try { const canvas = await captureCard(); const link = document.createElement('a'); link.download = 'soifuku-diagram.png'; link.href = canvas.toDataURL('image/png'); link.click(); showToast('PNGをダウンロードしました'); } catch(e) { showToast('エラーが発生しました'); } setLoading('btn-png', false); }
-async function downloadPDF() { setLoading('btn-pdf', true); try { const canvas = await captureCard(); const imgData = canvas.toDataURL('image/png'); const { jsPDF } = window.jspdf; const pdfW = 210; const pdfH = (canvas.height / canvas.width) * pdfW; const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] }); pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH); pdf.save('soifuku-diagram.pdf'); showToast('PDFをダウンロードしました'); } catch(e) { showToast('エラーが発生しました'); } setLoading('btn-pdf', false); }
+async function downloadPNG() { setLoading('btn-png', true); try { const c = await captureCard(); const a = document.createElement('a'); a.download = 'soifuku-diagram.png'; a.href = c.toDataURL('image/png'); a.click(); showToast('PNGをダウンロードしました'); } catch(e) { showToast('エラーが発生しました'); } setLoading('btn-png', false); }
+async function downloadPDF() { setLoading('btn-pdf', true); try { const c = await captureCard(); const img = c.toDataURL('image/png'); const { jsPDF } = window.jspdf; const w = 210, h = (c.height / c.width) * w; const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [w, h] }); pdf.addImage(img, 'PNG', 0, 0, w, h); pdf.save('soifuku-diagram.pdf'); showToast('PDFをダウンロードしました'); } catch(e) { showToast('エラーが発生しました'); } setLoading('btn-pdf', false); }
 </script>
 </body>
 </html>
