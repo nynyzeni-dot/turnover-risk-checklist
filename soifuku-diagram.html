@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スタッフが自ら動く組織の作り方</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f1a; font-family: 'Noto Sans JP', 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px; gap: 24px; overflow-x: hidden; }
+  .toolbar { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 12px 24px; border-radius: 16px; }
+  .toolbar-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); margin-right: 4px; }
+  .btn-download { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border: none; border-radius: 12px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .btn-download:hover { transform: translateY(-1px); }
+  .btn-download:active { transform: translateY(0); }
+  .btn-download:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn-png { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .btn-download .spinner { display: none; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  .btn-download.loading .spinner { display: block; }
+  .btn-download.loading .btn-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #1e1b4b; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 13px; font-weight: 700; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; display: flex; align-items: center; gap: 8px; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 18px; height: 18px; fill: none; stroke: #34d399; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .diagram-card { width: 880px; max-width: 100%; background: #ffffff; border-radius: 24px; overflow: hidden; }
+  .diagram-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); color: #fff; padding: 48px 48px 44px; text-align: center; position: relative; overflow: hidden; }
+  .deco-circle { position: absolute; border-radius: 50%; pointer-events: none; }
+  .header-deco-1 { top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255,255,255,0.08); }
+  .header-deco-2 { bottom: -60px; left: -30px; width: 160px; height: 160px; background: rgba(255,255,255,0.06); }
+  .header-tag { display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 18px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; position: relative; z-index: 1; }
+  .diagram-header h1 { font-size: 28px; font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; position: relative; z-index: 1; }
+  .diagram-header .subtitle { font-size: 14px; color: rgba(255,255,255,0.8); position: relative; z-index: 1; }
+  .diagram-body { padding: 44px 44px 40px; }
+  .section-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: #a78bfa; margin-bottom: 22px; }
+  .flow { display: flex; align-items: stretch; margin-bottom: 8px; }
+  .flow-step { flex: 1; text-align: center; padding: 28px 16px; border-radius: 18px; position: relative; }
+  .flow-step .step-number { position: absolute; top: 10px; left: 14px; font-size: 11px; font-weight: 800; color: #d1d5db; }
+  .flow-step .icon-wrap { width: 80px; height: 80px; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+  .flow-step .icon-wrap svg { width: 40px; height: 40px; }
+  .icon-red { background: #fee2e2; }
+  .icon-red svg { fill: #dc2626; }
+  .icon-amber { background: #fef3c7; }
+  .icon-amber svg { fill: #d97706; }
+  .icon-green { background: #d1fae5; }
+  .icon-green svg { fill: #059669; }
+  .flow-step h3 { font-size: 16px; font-weight: 800; color: #1e1b4b; margin-bottom: 10px; line-height: 1.4; }
+  .flow-step p { font-size: 12.5px; color: #6b7280; line-height: 1.7; }
+  .kw-red { color: #dc2626; font-weight: 700; }
+  .kw-amber { color: #d97706; font-weight: 700; }
+  .kw-green { color: #059669; font-weight: 700; }
+  .flow-arrow { display: flex; align-items: center; justify-content: center; width: 48px; flex-shrink: 0; }
+  .flow-arrow .arrow-icon { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; }
+  .flow-arrow .arrow-icon svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .connector { text-align: center; padding: 16px 0 32px; position: relative; }
+  .connector-line-top, .connector-line-bottom { position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 14px; background: #a78bfa; }
+  .connector-line-top { top: 0; }
+  .connector-line-bottom { bottom: 4px; }
+  .connector .connector-badge { display: inline-flex; align-items: center; gap: 8px; background: #f5f3ff; border: 1.5px solid #ddd6fe; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 700; color: #6d28d9; }
+  .connector .connector-badge svg { width: 16px; height: 16px; fill: none; stroke: #7c3aed; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .comparison { display: flex; gap: 20px; align-items: stretch; }
+  .comparison-box { flex: 1; border-radius: 20px; padding: 32px 24px; text-align: center; position: relative; overflow: hidden; }
+  .comparison-box.before { background: #fee2e2; border: 2px solid #fecaca; }
+  .comparison-box.after { background: #d1fae5; border: 2px solid #a7f3d0; }
+  .comparison-deco { position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; pointer-events: none; }
+  .before .comparison-deco { background: rgba(239,68,68,0.08); }
+  .after .comparison-deco { background: rgba(16,185,129,0.08); }
+  .comparison-box .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 14px; position: relative; z-index: 1; }
+  .comparison-box.before .label { color: #ef4444; }
+  .comparison-box.after .label { color: #059669; }
+  .comparison-box .big-number { font-size: 52px; font-weight: 900; margin-bottom: 2px; position: relative; z-index: 1; line-height: 1.1; }
+  .comparison-box.before .big-number { color: #dc2626; }
+  .comparison-box.after .big-number { color: #059669; }
+  .comparison-box .desc { font-size: 12.5px; color: #6b7280; position: relative; z-index: 1; margin-bottom: 12px; }
+  .desc-steps { display: flex; justify-content: center; gap: 6px; position: relative; z-index: 1; margin-bottom: 16px; flex-wrap: wrap; }
+  .step-pill { font-size: 10px; padding: 4px 10px; border-radius: 10px; font-weight: 600; }
+  .before .step-pill { background: rgba(239,68,68,0.15); color: #dc2626; }
+  .after .step-pill { background: rgba(16,185,129,0.15); color: #059669; }
+  .progress-bar-wrap { position: relative; z-index: 1; height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; margin: 0 12px; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; }
+  .before .progress-bar-fill { width: 25%; background: #ef4444; }
+  .after .progress-bar-fill { width: 90%; background: #10b981; }
+  .vs-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: 8px; }
+  .vs-badge { width: 44px; height: 44px; border-radius: 50%; background: #1e1b4b; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; letter-spacing: 1px; }
+  .speed-badge { background: #7c3aed; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 12px; white-space: nowrap; }
+  .bottom-cta { margin-top: 36px; text-align: center; padding: 32px 28px; background: #1e1b4b; border-radius: 20px; position: relative; overflow: hidden; }
+  .cta-deco-1 { position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(167,139,250,0.12); pointer-events: none; }
+  .cta-deco-2 { position: absolute; bottom: -40px; left: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(240,147,251,0.08); pointer-events: none; }
+  .bottom-cta .cta-icon { width: 48px; height: 48px; margin: 0 auto 14px; background: rgba(255,255,255,0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+  .bottom-cta .cta-icon svg { width: 26px; height: 26px; fill: none; stroke: #a78bfa; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .bottom-cta .cta-text { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 8px; position: relative; z-index: 1; }
+  .bottom-cta .cta-headline { font-size: 22px; font-weight: 900; color: #c4b5fd; line-height: 1.5; position: relative; z-index: 1; }
+  .diagram-footer { padding: 16px 44px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+  .diagram-footer small { font-size: 10px; color: #d1d5db; }
+  .diagram-footer .dots { display: flex; gap: 4px; }
+  .diagram-footer .dots span { width: 6px; height: 6px; border-radius: 50%; background: #e5e7eb; }
+  .diagram-footer .dots span:first-child { background: #a78bfa; }
+  @media (max-width: 600px) {
+    body { padding: 16px 8px; }
+    .diagram-body { padding: 24px 16px 20px; }
+    .diagram-header { padding: 32px 20px 28px; }
+    .diagram-header h1 { font-size: 1.3rem; }
+    .diagram-header .subtitle { font-size: 0.8rem; }
+    .flow { flex-direction: column; gap: 8px; }
+    .flow-arrow { transform: rotate(90deg); width: 100%; height: 40px; }
+    .comparison { flex-direction: column; }
+    .vs-divider { flex-direction: row; padding: 8px 0; }
+    .big-number { font-size: 36px !important; }
+    .bottom-cta .cta-headline { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toast-text"></span>
+</div>
+<div class="toolbar" id="toolbar">
+  <span class="toolbar-label">ダウンロード:</span>
+  <button class="btn-download btn-png" onclick="downloadPNG()" id="btn-png">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    <span class="btn-text">PNG</span>
+  </button>
+  <button class="btn-download btn-pdf" onclick="downloadPDF()" id="btn-pdf">
+    <span class="spinner"></span>
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
+    <span class="btn-text">PDF</span>
+  </button>
+</div>
+<div class="diagram-card" id="capture">
+  <div class="diagram-header">
+    <div class="deco-circle header-deco-1"></div>
+    <div class="deco-circle header-deco-2"></div>
+    <div class="header-tag">Visual Thinking</div>
+    <h1>スタッフが自ら動く組織の作り方</h1>
+    <p class="subtitle">先に自分を変える × 承認の文化 × 内発的動機への転換</p>
+  </div>
+  <div class="diagram-body">
+    <div class="section-label">Problem → Solution</div>
+    <div class="flow">
+      <div class="flow-step">
+        <span class="step-number">01</span>
+        <div class="icon-wrap icon-red">
+          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3>褒めない職場が<br>生む悪循環</h3>
+        <p>外発的動機（報酬・強制）だけでは続かない。<span class="kw-red">本音を話せない</span>スタッフは離職理由を嘘でごまかし、静かに去っていく</p>
+      </div>
+      <div class="flow-arrow"><div class="arrow-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+      <div class="flow-step">
+        <span class="step-number">02</span>
+        <div class="icon-wrap icon-amber">
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <h3>育成疲れと<br>人間的信頼の喪失</h3>
+        <p><span class="kw-amber">一貫性のなさ</span>と見返りを求める姿勢が信頼を壊す。育成疲れで諦めると上司自身の未来の選択肢を狭める</p>
+      </div>
+      <div class="flow-arrow"><div class="arrow-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+      <div class="flow-step">
+        <span class="step-number">03</span>
+        <div class="icon-wrap icon-green">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>先に自分を変える＋<br>毎日のストローク</h3>
+        <p>感じ方は変えられなくても<span class="kw-green">出し方は変えられる</span>。過程を褒め続ければ外発的動機が内発的動機へ転換する</p>
+      </div>
+    </div>
+    <div class="connector">
+      <div class="connector-line-top"></div>
+      <div class="connector-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        じゃあ、何が具体的に変わるのか？
+      </div>
+      <div class="connector-line-bottom"></div>
+    </div>
+    <div class="section-label">Before vs After</div>
+    <div class="comparison">
+      <div class="comparison-box before">
+        <div class="comparison-deco"></div>
+        <div class="label">不正型マネジメント</div>
+        <div class="big-number">離職続</div>
+        <div class="desc">命令・叱責中心で信頼が築けない状態</div>
+        <div class="desc-steps">
+          <span class="step-pill">命令</span>
+          <span class="step-pill">叱責</span>
+          <span class="step-pill">距離感</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
+      </div>
+      <div class="vs-divider">
+        <div class="vs-badge">VS</div>
+        <div class="speed-badge">紹介採用へ</div>
+      </div>
+      <div class="comparison-box after">
+        <div class="comparison-deco"></div>
+        <div class="label">承認×母性型マネジメント</div>
+        <div class="big-number">離職0</div>
+        <div class="desc">ストローク習慣が心理的安全性を育む</div>
+        <div class="desc-steps">
+          <span class="step-pill">ストローク</span>
+          <span class="step-pill">褒め</span>
+          <span class="step-pill">共感</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
+      </div>
+    </div>
+    <div class="bottom-cta">
+      <div class="cta-deco-1"></div>
+      <div class="cta-deco-2"></div>
+      <div class="cta-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <div class="cta-text">部下の育成と離職の防止③ ｜ ソイフク様 2026.05.07</div>
+      <div class="cta-headline">自分と向き合えた人だけが、人を導ける</div>
+    </div>
+  </div>
+  <div class="diagram-footer">
+    <small>Generated by AI Diagram Tool</small>
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+<script>
+function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toast-text').textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function setLoading(id, on) { const b = document.getElementById(id); b.classList.toggle('loading', on); b.disabled = on; }
+async function captureCard() { return await html2canvas(document.getElementById('capture'), { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false }); }
+async function downloadPNG() { setLoading('btn-png', true); try { const canvas = await captureCard(); const link = document.createElement('a'); link.download = 'soifuku-diagram.png'; link.href = canvas.toDataURL('image/png'); link.click(); showToast('PNGをダウンロードしました'); } catch(e) { showToast('エラーが発生しました'); } setLoading('btn-png', false); }
+async function downloadPDF() { setLoading('btn-pdf', true); try { const canvas = await captureCard(); const imgData = canvas.toDataURL('image/png'); const { jsPDF } = window.jspdf; const pdfW = 210; const pdfH = (canvas.height / canvas.width) * pdfW; const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] }); pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH); pdf.save('soifuku-diagram.pdf'); showToast('PDFをダウンロードしました'); } catch(e) { showToast('エラーが発生しました'); } setLoading('btn-pdf', false); }
+</script>
+</body>
+</html>
